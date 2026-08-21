@@ -1,0 +1,98 @@
+/* Manual de usuario. Se carga solo desde las vistas de /Documentacion. */
+
+.doc-nav {
+    position: sticky;
+    top: 1rem;
+}
+
+.doc-nav .card {
+    margin-bottom: .75rem;
+}
+
+.doc-indice {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.doc-indice .list-group-item {
+    border: 0;
+    padding: .4rem .9rem;
+    font-size: .875rem;
+}
+
+.doc-tema {
+    scroll-margin-top: 1rem;
+}
+
+.doc-ruta {
+    font-family: monospace;
+    font-weight: normal;
+    margin-right: .35rem;
+}
+
+.doc-para-que {
+    font-size: 1rem;
+}
+
+.doc-titulo-bloque {
+    margin-top: 1.1rem;
+    margin-bottom: .5rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: #6c757d;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.doc-pasos > li,
+.doc-reglas > li {
+    margin-bottom: .35rem;
+}
+
+.doc-errores code {
+    color: #b02a37;
+    background-color: rgba(0, 0, 0, .04);
+    padding: .1rem .3rem;
+    border-radius: .2rem;
+}
+
+.doc-figura {
+    margin-top: 1.1rem;
+    margin-bottom: 0;
+}
+
+.doc-figura img {
+    border: 1px solid rgba(0, 0, 0, .125);
+    border-radius: .25rem;
+}
+
+.doc-figura figcaption {
+    margin-top: .35rem;
+    font-size: .8rem;
+    color: #6c757d;
+}
+
+.doc-portada .card-body p {
+    min-height: 3.5rem;
+}
+
+/* El manual se imprime a menudo para repartirlo: fuera el cromo de la aplicación. */
+@media print {
+    .main-sidebar,
+    .main-header,
+    .main-footer,
+    .doc-nav,
+    .card-tools {
+        display: none !important;
+    }
+
+    .content-wrapper {
+        margin-left: 0 !important;
+    }
+
+    .doc-tema {
+        page-break-inside: avoid;
+        border: 1px solid #dee2e6 !important;
+        box-shadow: none !important;
+    }
+}

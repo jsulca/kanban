@@ -1,0 +1,33 @@
+﻿@{
+    ViewBag.Title = "Manual - Confirmaciones";
+    ViewBag.Seccion = "Confirmaciones";
+    var temas = new List<DocumentacionModel.Tema>();
+}
+
+<link href="~/css/documentacion.css" rel="stylesheet" />
+
+
+<div class="row">
+    <div class="col-lg-3 d-print-none">
+        @await Html.PartialAsync("_Nav", temas)
+    </div>
+    <div class="col-lg-9">
+        <div class="card card-default">
+            <div class="card-header bg-danger">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fa fa-tasks"></i>&nbsp; Confirmaciones
+                </h3>
+            </div>
+            <div class="card-body">
+                <p>Esta sección todavía no está escrita. Cuando se redacte incluirá:</p>
+                <ul class="mb-0">
+                    <li><b>Modelar</b> una confirmación: categorías y preguntas.</li>
+                    <li><b>Registrar</b> y <b>verificar</b> una confirmación.</li>
+                    <li>La pantalla de <b>gestión</b> y el <b>tablero</b>.</li>
+                    <li><b>Planes de acción</b> derivados de una confirmación.</li>
+                    <li><b>Sostenibilidad</b> por mes y <b>exportación a Excel</b>.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

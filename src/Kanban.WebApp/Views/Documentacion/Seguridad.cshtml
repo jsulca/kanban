@@ -1,0 +1,212 @@
+﻿@{
+    ViewBag.Title = "Manual - Seguridad";
+    ViewBag.Seccion = "Seguridad";
+
+    var temas = new List<DocumentacionModel.Tema>
+    {
+        new()
+        {
+            Id = "como-funciona",
+            Titulo = "Cómo funcionan los permisos",
+            Icono = "fa fa-circle-info",
+            ParaQue = "Antes de tocar nada conviene entender el encadenado, porque los cuatro maestros "
+                      + "de esta sección solo tienen sentido juntos.",
+            Pasos =
+            [
+                "Una <b>página</b> es una pantalla del sistema, identificada por su área, su controlador y su acción. Es la unidad de permiso.",
+                "Un <b>control</b> es un botón dentro de una página (por ejemplo «Nuevo» o «Eliminar»). Cuelga de una página.",
+                "Un <b>menú</b> es una entrada del menú izquierdo. Lo que se ve en esa barra sale de aquí, no del código.",
+                "Un <b>rol</b> concede tres cosas: qué menús ve, a qué páginas entra y qué controles puede usar dentro de cada página.",
+                "Un <b>usuario</b> tiene un rol y, además, la lista de <b>estructuras</b> (niveles) cuya información puede ver."
+            ],
+            Reglas =
+            [
+                "Si una página no está concedida al rol, el usuario que intente entrar acaba en «página no encontrada», aunque escriba la dirección a mano.",
+                "Dar de alta una pantalla nueva no basta con programarla: hay que crear su <b>página</b> y concedérsela a algún <b>rol</b>.",
+                "El rol <b>ADMINISTRADOR</b> es el único que puede tener usuarios sin caducidad de contraseña."
+            ]
+        },
+        new()
+        {
+            Id = "usuario",
+            Titulo = "Usuarios",
+            Icono = "fa fa-user",
+            Ruta = "/Seguridad/Usuario",
+            ParaQue = "Quién entra al sistema. Cada usuario está enlazado a un empleado, tiene un rol y "
+                      + "un conjunto de niveles a los que accede.",
+            Pasos =
+            [
+                "Abra <b>/Seguridad/Usuario</b>.",
+                "Pulse <b>Nuevo</b>.",
+                "Elija el <b>Empleado</b> y escriba el <b>Nombre</b> de usuario con el que entrará.",
+                "Escriba la <b>Clave</b> inicial.",
+                "Elija el <b>Rol</b> y el <b>Nivel</b> (la estructura a la que pertenece).",
+                "Marque en el árbol todas las <b>estructuras</b> cuya información podrá ver.",
+                "Decida si activa la <b>caducidad de contraseña</b>. Si la activa, indique cada cuántos días debe renovarla.",
+                "Deje marcado <b>Activo</b> y pulse <b>Guardar</b>.",
+                "Para revisar quién ha intentado entrar sin conseguirlo, seleccione el usuario y abra <b>Intentos fallidos</b>."
+            ],
+            Reglas =
+            [
+                "Son obligatorios: <b>nombre</b>, <b>empleado</b>, <b>rol</b>, <b>nivel</b> y al menos una <b>estructura</b> marcada.",
+                "La <b>clave</b> solo es obligatoria al crear el usuario; al editarlo, si se deja vacía se conserva la que tenía.",
+                "La clave debe tener <b>al menos 10 caracteres</b>, una <b>mayúscula</b>, un <b>número</b> y un <b>carácter especial</b>.",
+                "Todo rol distinto de <b>ADMINISTRADOR</b> está obligado a tener caducidad de contraseña.",
+                "Para retirar el acceso a alguien, desmarque <b>Activo</b>: al entrar verá «El usuario no se encuentra activo». No hace falta borrarlo, y así se conserva su historial."
+            ],
+            Errores =
+            [
+                new("Ingrese el nombre.", "Falta el nombre de usuario."),
+                new("Ingrese la clave.", "Se está creando un usuario nuevo sin clave."),
+                new("La clave de contener como minimo 10 caracteres", "La clave es demasiado corta."),
+                new("La clave debe contener un carácter en mayuscula", "Falta una mayúscula."),
+                new("La clave debe contener un número", "Falta un número."),
+                new("La clave debe contener al menos una carácter especial.", "Falta un símbolo como ! @@ # $ % ^ &amp; *."),
+                new("Seleccione un empleado.", "No se enlazó el usuario a ningún empleado."),
+                new("Seleccione un rol.", "No se eligió rol."),
+                new("Seleccione un nivel.", "No se eligió la estructura a la que pertenece."),
+                new("No se encuentra asociado a muchas estructuras.", "No se marcó ninguna estructura en el árbol."),
+                new("Un rol distinto a ADMINISTRADOR debe tener un tiempo de caducidad.", "Se dejó sin caducidad un usuario que no es administrador.")
+            ],
+            Captura = "seguridad-usuario.png"
+        },
+        new()
+        {
+            Id = "rol",
+            Titulo = "Roles",
+            Icono = "fa fa-user-tag",
+            Ruta = "/Seguridad/Rol",
+            ParaQue = "El paquete de permisos que se le da a un usuario. Es la pantalla donde se decide "
+                      + "qué ve y qué puede hacer cada perfil.",
+            Pasos =
+            [
+                "Abra <b>/Seguridad/Rol</b>.",
+                "Pulse <b>Nuevo</b>. La pantalla se abre completa, no en una ventana, porque hay mucho que marcar.",
+                "Escriba el <b>Nombre</b> del rol.",
+                "En el árbol de <b>menús</b>, marque las entradas que verá en la barra izquierda.",
+                "En la lista de <b>páginas</b>, marque las pantallas a las que podrá entrar y, dentro de cada una, los <b>controles</b> (botones) que podrá usar.",
+                "Pulse <b>Guardar</b>."
+            ],
+            Reglas =
+            [
+                "El <b>nombre</b> es obligatorio.",
+                "Marcar el menú no da permiso: el permiso lo da la <b>página</b>. Si concede el menú pero no la página, el usuario verá la entrada y al pulsarla acabará en «página no encontrada».",
+                "Al revés también pasa: si concede la página pero no el menú, la pantalla funciona pero hay que llegar por la dirección.",
+                "Los cambios de permisos tardan <b>hasta 10 minutos</b> en aplicarse a quien ya tiene la sesión abierta; si cierra sesión y vuelve a entrar, se aplican al momento."
+            ],
+            Errores = [new("Ingrese un nombre", "Se dejó vacío el nombre del rol.")],
+            Captura = "seguridad-rol.png"
+        },
+        new()
+        {
+            Id = "menu",
+            Titulo = "Menús",
+            Icono = "fa fa-bars",
+            Ruta = "/Seguridad/Menu",
+            ParaQue = "Arma la barra de la izquierda. Se ve como un árbol: las entradas cuelgan unas de "
+                      + "otras.",
+            Pasos =
+            [
+                "Abra <b>/Seguridad/Menu</b>.",
+                "Seleccione en el árbol la entrada de la que debe colgar la nueva y pulse <b>Nuevo</b>.",
+                "Escriba el <b>Nombre</b> que se verá.",
+                "Elija el <b>Tipo</b>: <b>NORMAL</b> es una opción que enlaza a una pantalla, <b>COLLAPSE</b> es un grupo que se despliega y <b>HEADER</b> es un simple título separador.",
+                "Si es NORMAL, escriba la <b>Url</b> de la pantalla y el <b>Icono</b>.",
+                "Indique el <b>Orden</b> y pulse <b>Guardar</b>."
+            ],
+            Reglas =
+            [
+                "El <b>nombre</b> y el <b>tipo</b> son siempre obligatorios.",
+                "La <b>url</b> y el <b>icono</b> solo se exigen a las entradas de tipo NORMAL: un grupo o un título no llevan destino.",
+                "El <b>orden</b> decide la posición dentro de su grupo.",
+                "Después de crear la entrada hay que concedérsela a un rol; si no, no la ve nadie."
+            ],
+            Errores =
+            [
+                new("Ingrese un nombre.", "Falta el nombre de la entrada."),
+                new("Seleccione un tipo de menu", "No se eligió entre NORMAL, COLLAPSE y HEADER."),
+                new("Ingrese una url.", "Una entrada NORMAL se dejó sin destino."),
+                new("Ingrese un icono.", "Una entrada NORMAL se dejó sin icono.")
+            ],
+            Captura = "seguridad-menu.png"
+        },
+        new()
+        {
+            Id = "pagina",
+            Titulo = "Páginas y controles",
+            Icono = "fa fa-file-lines",
+            Ruta = "/Seguridad/Pagina",
+            ParaQue = "El catálogo de pantallas del sistema. Cada página se identifica por su área, su "
+                      + "controlador y su acción, y de ella cuelgan los controles (los botones que se "
+                      + "pueden conceder por separado).",
+            Pasos =
+            [
+                "Abra <b>/Seguridad/Pagina</b>.",
+                "Pulse <b>Nuevo</b>.",
+                "Escriba el <b>Nombre</b> con el que quiere reconocerla.",
+                "Complete <b>Área</b> (vacío si la pantalla no está en un área), <b>Controlador</b> y <b>Acción</b>. Tienen que coincidir exactamente con la dirección de la pantalla.",
+                "Añada los <b>controles</b> que quiera poder conceder por separado.",
+                "Pulse <b>Guardar</b> y después concédale la página a los roles que corresponda."
+            ],
+            Reglas =
+            [
+                "El trío <b>área + controlador + acción</b> es lo que se compara al entrar a una pantalla: un error de escritura deja la pantalla inaccesible aunque el rol la tenga marcada.",
+                "Para una pantalla fuera de áreas, el campo <b>área</b> va vacío.",
+                "Los <b>controles</b> no ocultan botones por sí solos: cada pantalla decide qué hacer con la lista de controles concedidos."
+            ],
+            Captura = "seguridad-pagina.png"
+        },
+        new()
+        {
+            Id = "solicitud",
+            Titulo = "Solicitudes de acceso",
+            Icono = "fa fa-envelope-open-text",
+            Ruta = "/Seguridad/Solicitud",
+            ParaQue = "Lista de las personas que han pedido acceso desde la aplicación móvil. Es una "
+                      + "pantalla de solo consulta.",
+            Pasos =
+            [
+                "Abra <b>/Seguridad/Solicitud</b>.",
+                "Revise la lista: nombre, apellido, documento, correo, teléfono y fecha de la solicitud.",
+                "Para conceder el acceso, dé de alta al <b>empleado</b> (si no existe) y después créele un <b>usuario</b>."
+            ],
+            Reglas =
+            [
+                "Las solicitudes no se aprueban desde aquí: la pantalla solo informa de quién ha pedido entrar.",
+                "La solicitud no crea ni empleado ni usuario: los dos pasos son manuales."
+            ],
+            Captura = "seguridad-solicitud.png"
+        }
+
+
+    };
+}
+
+<link href="~/css/documentacion.css" rel="stylesheet" />
+
+<div class="row">
+    <div class="col-lg-3 d-print-none">
+        @await Html.PartialAsync("_Nav", temas)
+    </div>
+    <div class="col-lg-9">
+        <div class="card card-default">
+            <div class="card-header bg-danger">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fa fa-user-shield"></i>&nbsp; Seguridad
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">
+                    Aquí se decide quién entra y qué puede hacer. Para dar acceso a alguien nuevo el
+                    camino completo es: <b>Empleado → Usuario → Rol</b>, y el rol tiene que tener
+                    concedidos los <b>menús</b> y las <b>páginas</b> que esa persona necesita.
+                </p>
+            </div>
+        </div>
+
+        @foreach (var tema in temas)
+        {
+            @await Html.PartialAsync("_Tema", tema)
+        }
+    </div>
+</div>

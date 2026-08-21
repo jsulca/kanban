@@ -1,0 +1,309 @@
+﻿@{
+    ViewBag.Title = "Manual - Maestros";
+    ViewBag.Seccion = "Maestros";
+
+    var temas = new List<DocumentacionModel.Tema>
+    {
+        new()
+        {
+            Id = "area",
+            Titulo = "Áreas",
+            Icono = "fa fa-shapes",
+            Ruta = "/Area",
+            ParaQue = "Agrupa a los empleados por área de trabajo. El área es además la que da color a "
+                      + "las tarjetas del tablero de compromisos: el color de fondo y el de texto que se "
+                      + "eligen aquí son los que se ven después en cada tarjeta.",
+            Pasos =
+            [
+                "Abra <b>/Area</b>. La tabla muestra el código y la descripción de las áreas ya creadas.",
+                "Pulse <b>Nuevo</b>. Se abre una ventana sobre la pantalla.",
+                "Escriba el <b>Código</b> (opcional, se guarda en mayúsculas) y la <b>Descripción</b>.",
+                "Elija el <b>Color de fondo</b> y el <b>Color de texto</b> de las listas. Los colores salen del maestro de Colores.",
+                "Pulse <b>Guardar</b>. La tabla se actualiza sola.",
+                "Para cambiar un área, pulse sobre su fila y luego <b>Editar</b>."
+            ],
+            Reglas =
+            [
+                "La <b>descripción</b> es obligatoria.",
+                "El <b>color de fondo</b> y el <b>color de texto</b> son obligatorios: sin ellos la tarjeta del tablero no sabría cómo pintarse.",
+                "El <b>código</b> puede quedar vacío."
+            ],
+            Errores =
+            [
+                new("Ingrese una descripción.", "Se dejó vacía la descripción."),
+                new("Seleccione un color de fondo.", "No se eligió color de fondo en la lista."),
+                new("Seleccione un color de texto.", "No se eligió color de texto en la lista.")
+            ],
+            Captura = "maestros-area.png"
+        },
+        new()
+        {
+            Id = "cargo",
+            Titulo = "Cargos",
+            Icono = "fa fa-id-badge",
+            Ruta = "/Cargo",
+            ParaQue = "Lista de cargos que se asignan a los empleados. Es un maestro sencillo: solo "
+                      + "código y descripción.",
+            Pasos =
+            [
+                "Abra <b>/Cargo</b>.",
+                "Pulse <b>Nuevo</b>, escriba el <b>Código</b> y la <b>Descripción</b> y pulse <b>Guardar</b>.",
+                "Para modificar uno, selecciónelo en la tabla y pulse <b>Editar</b>."
+            ],
+            Reglas = ["La <b>descripción</b> es obligatoria."],
+            Errores = [new("Ingrese una descripción.", "Se dejó vacía la descripción.")],
+            Captura = "maestros-cargo.png"
+        },
+        new()
+        {
+            Id = "color",
+            Titulo = "Colores",
+            Icono = "fa fa-palette",
+            Ruta = "/Color",
+            ParaQue = "Paleta que usan las áreas y las instancias. Cada color guarda su valor en "
+                      + "hexadecimal, en RGBA y el nombre de la clase con la que se pinta en pantalla.",
+            Pasos =
+            [
+                "Abra <b>/Color</b>.",
+                "Pulse <b>Nuevo</b> y escriba la <b>Descripción</b> (el nombre con el que lo verá el resto de pantallas).",
+                "Complete el valor <b>Hex</b>, el <b>Rgba</b> y la <b>Clase</b>.",
+                "Pulse <b>Guardar</b>."
+            ],
+            Reglas =
+            [
+                "La <b>descripción</b> es obligatoria.",
+                "Antes de borrar o cambiar un color conviene revisar qué áreas e instancias lo están usando: el cambio se ve al momento en el tablero."
+            ],
+            Errores = [new("Ingrese una descripción.", "Se dejó vacía la descripción.")],
+            Captura = "maestros-color.png"
+        },
+        new()
+        {
+            Id = "origen",
+            Titulo = "Orígenes",
+            Icono = "fa fa-diagram-project",
+            Ruta = "/Origen",
+            ParaQue = "De dónde nace un compromiso. Es la lista que se ofrece al registrar un compromiso "
+                      + "nuevo, tanto en la web como en la aplicación móvil.",
+            Pasos =
+            [
+                "Abra <b>/Origen</b>.",
+                "Pulse <b>Nuevo</b>, escriba el <b>Nombre</b> y marque <b>Activo</b>.",
+                "Pulse <b>Guardar</b>."
+            ],
+            Reglas =
+            [
+                "El <b>nombre</b> es obligatorio.",
+                "Solo los orígenes <b>activos</b> aparecen al registrar un compromiso. Para retirar uno, desmárquelo en vez de borrarlo: los compromisos antiguos conservan el que tenían."
+            ],
+            Errores = [new("Ingrese un nombre", "Se dejó vacío el nombre.")],
+            Captura = "maestros-origen.png"
+        },
+        new()
+        {
+            Id = "instancia",
+            Titulo = "Instancias",
+            Icono = "fa fa-layer-group",
+            Ruta = "/Instancia",
+            ParaQue = "Los niveles a los que se puede escalar un compromiso (por ejemplo Gerencia o "
+                      + "Dirección). Cada instancia es una columna del tablero de gestión, y por eso "
+                      + "también lleva colores.",
+            Pasos =
+            [
+                "Abra <b>/Instancia</b>.",
+                "Pulse <b>Nuevo</b> y escriba la <b>Abreviatura</b> (es lo que se ve como título de la columna) y la <b>Descripción</b>.",
+                "Elija el <b>Color de fondo</b> y el <b>Color de texto</b>.",
+                "Pulse <b>Guardar</b>."
+            ],
+            Reglas =
+            [
+                "La <b>descripción</b>, el <b>color de fondo</b> y el <b>color de texto</b> son obligatorios.",
+                "La <b>abreviatura</b> conviene que sea corta: es el título de una columna estrecha del tablero.",
+                "Qué instancias aparecen en el tablero de un nivel se decide en <b>Estructuras ▸ Modelar tablero</b>, no aquí."
+            ],
+            Errores =
+            [
+                new("Ingrese una descripcion", "Se dejó vacía la descripción."),
+                new("Seleccione un color de fondo.", "No se eligió color de fondo."),
+                new("Seleccione un color de texto.", "No se eligió color de texto.")
+            ],
+            Captura = "maestros-instancia.png"
+        },
+        new()
+        {
+            Id = "indicador",
+            Titulo = "Indicadores",
+            Icono = "fa fa-chart-line",
+            Ruta = "/Indicador",
+            ParaQue = "Indicadores sobre los que impacta un compromiso. Es la lista que se ofrece en el "
+                      + "campo de impacto al registrar un compromiso.",
+            Pasos =
+            [
+                "Abra <b>/Indicador</b>.",
+                "Pulse <b>Nuevo</b>, escriba el <b>Nombre</b> y marque <b>Activo</b>.",
+                "Pulse <b>Guardar</b>."
+            ],
+            Reglas =
+            [
+                "El <b>nombre</b> es obligatorio.",
+                "Solo los <b>activos</b> se ofrecen al registrar un compromiso."
+            ],
+            Errores = [new("Ingrese un nombre", "Se dejó vacío el nombre.")],
+            Captura = "maestros-indicador.png"
+        },
+        new()
+        {
+            Id = "tipoverificacion",
+            Titulo = "Tipos de verificación",
+            Icono = "fa fa-clipboard-check",
+            Ruta = "/TipoVerificacion",
+            ParaQue = "Clasifica las confirmaciones. Además del nombre, cada tipo tiene dos marcas, "
+                      + "<b>VP</b> e <b>IGP</b>, que indican en qué conteos entra esa confirmación.",
+            Pasos =
+            [
+                "Abra <b>/TipoVerificacion</b>.",
+                "Pulse <b>Nuevo</b> y escriba el <b>Nombre</b>.",
+                "Marque <b>VP</b> o <b>IGP</b> según corresponda, y <b>Activo</b>.",
+                "Pulse <b>Guardar</b>."
+            ],
+            Reglas =
+            [
+                "El <b>nombre</b> es obligatorio.",
+                "Solo los tipos <b>activos</b> se ofrecen al crear una confirmación."
+            ],
+            Errores = [new("Ingrese un nombre", "Se dejó vacío el nombre.")],
+            Captura = "maestros-tipoverificacion.png"
+        },
+        new()
+        {
+            Id = "configuracion",
+            Titulo = "Configuración",
+            Icono = "fa fa-sliders",
+            Ruta = "/Configuracion",
+            ParaQue = "Parámetros generales del sistema. Hoy el que se usa es "
+                      + "<b>RENOVACION_CLAVE</b>: cada cuántos días caduca la contraseña de los usuarios "
+                      + "que tienen la caducidad activada.",
+            Pasos =
+            [
+                "Abra <b>/Configuracion</b>.",
+                "Seleccione la fila del parámetro y pulse <b>Editar</b>.",
+                "Cambie la cantidad de <b>Días</b> y pulse <b>Guardar</b>."
+            ],
+            Reglas =
+            [
+                "La <b>llave</b> identifica el parámetro y no se cambia.",
+                "Los <b>días</b> tienen que ser mayores que cero.",
+                "El nuevo plazo se aplica a partir del siguiente cambio de clave de cada usuario, no de forma retroactiva."
+            ],
+            Errores =
+            [
+                new("La configuracion no tiene una llave", "Se intentó guardar sin llave."),
+                new("La cantidad de dias no puede ser menor igual a cero", "Se puso 0 o un número negativo en los días.")
+            ],
+            Captura = "maestros-configuracion.png"
+        },
+        new()
+        {
+            Id = "empleado",
+            Titulo = "Empleados",
+            Icono = "fa fa-users",
+            Ruta = "/Empleado",
+            ParaQue = "Las personas de la organización. De aquí salen los responsables de los "
+                      + "compromisos y los confirmadores, y cada usuario del sistema está enlazado a un "
+                      + "empleado.",
+            Pasos =
+            [
+                "Abra <b>/Empleado</b>. Puede filtrar la tabla por área o por cargo.",
+                "Pulse <b>Nuevo</b>.",
+                "Complete <b>Nombre</b>, <b>Apellido paterno</b>, <b>Apellido materno</b> y <b>Nro. de documento</b>.",
+                "Elija el <b>Área</b> y el <b>Cargo</b>. Puede añadir <b>Correo</b> y <b>Teléfono</b>.",
+                "Pulse <b>Guardar</b>.",
+                "Para cargar muchos de golpe, use <b>/Empleado/Masivo</b>: se pegan los datos en la tabla y se guardan todos juntos. Si una sola fila está mal, no se guarda ninguna y el mensaje indica el número de fila."
+            ],
+            Reglas =
+            [
+                "Son obligatorios: <b>nombre</b>, <b>apellido paterno</b>, <b>apellido materno</b>, <b>nro. de documento</b> y <b>área</b>.",
+                "En la carga masiva las mismas reglas se aplican a cada fila, y el mensaje de error indica de qué empleado se trata (<i>Empleado Nº 3: …</i>)."
+            ],
+            Errores =
+            [
+                new("Ingrese un Nombre.", "Falta el nombre."),
+                new("Ingrese su apellido paterno.", "Falta el apellido paterno."),
+                new("Ingrese su apellido materno.", "Falta el apellido materno."),
+                new("Ingrese su Nro de DNI.", "Falta el número de documento."),
+                new("Seleccione un área.", "No se eligió área."),
+                new("El contenido se encuentra vacio.", "En la carga masiva no se pegó ninguna fila.")
+            ],
+            Captura = "maestros-empleado.png"
+        },
+        new()
+        {
+            Id = "estructura",
+            Titulo = "Estructuras y tableros",
+            Icono = "fa fa-sitemap",
+            Ruta = "/Estructura",
+            ParaQue = "El organigrama del sistema, en forma de árbol: cada nivel puede colgar de otro. "
+                      + "Un nivel marcado como <b>tablero</b> es el que tiene pizarra de compromisos. Es "
+                      + "el maestro más importante, porque de él dependen los permisos por nivel y todo "
+                      + "el tablero.",
+            Pasos =
+            [
+                "Abra <b>/Estructura</b>. Se ve el árbol completo.",
+                "Seleccione el nivel del que debe colgar el nuevo y pulse <b>Nuevo</b>.",
+                "Escriba el <b>Código</b> y la <b>Descripción</b>.",
+                "Marque <b>Tablero</b> solo si ese nivel va a tener pizarra de compromisos propia.",
+                "Pulse <b>Guardar</b>.",
+                "Con el nivel seleccionado, use <b>Modelar tablero</b> para definir qué <b>instancias</b> (columnas de escalamiento), qué <b>áreas</b>, qué <b>empleados</b> por área y qué responsables de <b>sostenibilidad</b> participan en ese tablero."
+            ],
+            Reglas =
+            [
+                "La <b>descripción</b> es obligatoria.",
+                "<b>No se puede poner un tablero dentro de otro tablero.</b> Si lo intenta, el sistema lo impide.",
+                "Al modelar el tablero, cada fila que añada debe quedar completa: instancia elegida, área elegida y, en el caso de empleados, área y empleado.",
+                "Los usuarios solo ven los niveles que tengan asignados en <b>Seguridad ▸ Usuarios</b>."
+            ],
+            Errores =
+            [
+                new("La descripción no puede estar vacio.", "Falta la descripción del nivel."),
+                new("No puede agregar un tablero dentro de otro.", "Se marcó «Tablero» en un nivel que ya cuelga de otro tablero."),
+                new("La instancia 2 no tiene un identificador.", "Al modelar, quedó una fila de instancia sin elegir."),
+                new("El área 1 no tiene un identificador.", "Al modelar, quedó una fila de área sin elegir."),
+                new("El empleado 3 no tiene un identificador.", "Al modelar, quedó una fila de empleado a medias.")
+            ],
+            Captura = "maestros-estructura.png"
+        }
+
+
+    };
+}
+
+<link href="~/css/documentacion.css" rel="stylesheet" />
+
+<div class="row">
+    <div class="col-lg-3 d-print-none">
+        @await Html.PartialAsync("_Nav", temas)
+    </div>
+    <div class="col-lg-9">
+        <div class="card card-default">
+            <div class="card-header bg-danger">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fa fa-database"></i>&nbsp; Maestros
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">
+                    Los maestros son las listas de las que se alimenta el resto del sistema. Conviene
+                    darlos de alta en este orden, porque cada uno depende del anterior:
+                    <b>Colores → Áreas → Cargos → Empleados → Estructuras</b>. Los demás
+                    (orígenes, indicadores, instancias y tipos de verificación) pueden crearse en
+                    cualquier momento.
+                </p>
+            </div>
+        </div>
+
+        @foreach (var tema in temas)
+        {
+            @await Html.PartialAsync("_Tema", tema)
+        }
+    </div>
+</div>

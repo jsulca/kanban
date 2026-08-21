@@ -1,0 +1,51 @@
+@model List<DocumentacionModel.Tema>
+@{
+    // ViewBag.Seccion marca cuál de las cuatro está abierta.
+    string seccion = ViewBag.Seccion ?? "";
+
+    var secciones = new[]
+    {
+        new { Accion = "Maestros", Titulo = "Maestros", Icono = "fa fa-database" },
+        new { Accion = "Seguridad", Titulo = "Seguridad", Icono = "fa fa-user-shield" },
+        new { Accion = "Compromisos", Titulo = "Compromisos", Icono = "fa fa-handshake" },
+        new { Accion = "Confirmaciones", Titulo = "Confirmaciones", Icono = "fa fa-tasks" }
+    };
+}
+
+<div class="doc-nav">
+    <div class="card card-default">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fa fa-book"></i>&nbsp; Manual</h3>
+        </div>
+        <div class="list-group list-group-flush">
+            @foreach (var item in secciones)
+            {
+                <a href="@Url.Action(item.Accion, "Documentacion")"
+                   class="list-group-item list-group-item-action @(seccion == item.Accion ? "active" : "")">
+                    <i class="@item.Icono fa-fw"></i>&nbsp; @item.Titulo
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (Model.Count > 0)
+    {
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title">En esta página</h3>
+            </div>
+            <div class="list-group list-group-flush doc-indice">
+                @foreach (var tema in Model)
+                {
+                    <a href="#@tema.Id" class="list-group-item list-group-item-action">
+                        <i class="@tema.Icono fa-fw text-muted"></i>&nbsp; @tema.Titulo
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    <button type="button" class="btn btn-secondary btn-block d-print-none" onclick="window.print()">
+        <i class="fa fa-print"></i>&nbsp; Imprimir esta sección
+    </button>
+</div>

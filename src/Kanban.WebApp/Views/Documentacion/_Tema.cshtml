@@ -1,0 +1,83 @@
+@model DocumentacionModel.Tema
+@inject IWebHostEnvironment Entorno
+@{
+    // La captura solo se pinta si el archivo existe: así se pueden ir añadiendo
+    // poco a poco sin que salgan imágenes rotas mientras tanto.
+    var hayCaptura = !string.IsNullOrWhiteSpace(Model.Captura)
+                     && System.IO.File.Exists(
+                         System.IO.Path.Combine(Entorno.WebRootPath, "images", "docs", Model.Captura));
+}
+
+<div class="card card-default doc-tema" id="@Model.Id">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="@Model.Icono"></i>&nbsp; @Model.Titulo
+        </h3>
+        <div class="card-tools">
+            @if (!string.IsNullOrWhiteSpace(Model.Ruta))
+            {
+                <span class="badge badge-light doc-ruta">@Model.Ruta</span>
+            }
+            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Plegar">
+                <i class="fas fa-minus"></i>
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <p class="doc-para-que">@Model.ParaQue</p>
+
+        @if (Model.Pasos.Count > 0)
+        {
+            <h6 class="doc-titulo-bloque"><i class="fa fa-shoe-prints"></i>&nbsp; Cómo se hace</h6>
+            <ol class="doc-pasos">
+                @foreach (var paso in Model.Pasos)
+                {
+                    <li>@Html.Raw(paso)</li>
+                }
+            </ol>
+        }
+
+        @if (Model.Reglas.Count > 0)
+        {
+            <h6 class="doc-titulo-bloque"><i class="fa fa-list-check"></i>&nbsp; Reglas</h6>
+            <ul class="doc-reglas">
+                @foreach (var regla in Model.Reglas)
+                {
+                    <li>@Html.Raw(regla)</li>
+                }
+            </ul>
+        }
+
+        @if (Model.Errores.Count > 0)
+        {
+            <h6 class="doc-titulo-bloque"><i class="fa fa-triangle-exclamation"></i>&nbsp; Si algo falla</h6>
+            <div class="table-responsive">
+                <table class="table table-sm doc-errores">
+                    <thead>
+                        <tr>
+                            <th width="45%">Mensaje</th>
+                            <th>Qué significa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var error in Model.Errores)
+                        {
+                            <tr>
+                                <td><code>@error.Texto</code></td>
+                                <td>@error.Significado</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @if (hayCaptura)
+        {
+            <figure class="doc-figura">
+                <img src="~/images/docs/@Model.Captura" alt="Captura de @Model.Titulo" class="img-fluid" />
+                <figcaption>@Model.Titulo</figcaption>
+            </figure>
+        }
+    </div>
+</div>

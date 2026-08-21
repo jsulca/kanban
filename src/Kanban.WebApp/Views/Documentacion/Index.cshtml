@@ -1,0 +1,88 @@
+﻿@{
+    ViewBag.Title = "Manual de usuario";
+    ViewBag.Seccion = "";
+
+    var secciones = new[]
+    {
+        new
+        {
+            Accion = "Maestros", Titulo = "Maestros", Icono = "fa fa-database", Estado = "listo",
+            Descripcion = "Las listas de las que se alimenta todo lo demás: áreas, cargos, colores, "
+                          + "orígenes, instancias, indicadores, tipos de verificación, configuración, "
+                          + "empleados y estructuras.",
+            Temas = "10 temas"
+        },
+        new
+        {
+            Accion = "Seguridad", Titulo = "Seguridad", Icono = "fa fa-user-shield", Estado = "listo",
+            Descripcion = "Quién entra y qué puede hacer: usuarios, roles, menús, páginas y controles, "
+                          + "y las solicitudes de acceso llegadas desde la aplicación móvil.",
+            Temas = "6 temas"
+        },
+        new
+        {
+            Accion = "Compromisos", Titulo = "Compromisos", Icono = "fa fa-handshake", Estado = "pendiente",
+            Descripcion = "El tablero, el registro de un compromiso, la asignación, el seguimiento, la "
+                          + "verificación, los indicadores y la exportación.",
+            Temas = "en preparación"
+        },
+        new
+        {
+            Accion = "Confirmaciones", Titulo = "Confirmaciones", Icono = "fa fa-tasks", Estado = "pendiente",
+            Descripcion = "Cómo se modela una confirmación, cómo se registra y se verifica, los planes "
+                          + "de acción y la sostenibilidad.",
+            Temas = "en preparación"
+        }
+
+
+    };
+}
+
+<link href="~/css/documentacion.css" rel="stylesheet" />
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header bg-danger">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fa fa-book"></i>&nbsp; Manual de usuario
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">
+                    Cómo se usa cada pantalla del sistema, paso a paso. Cada tema explica para qué sirve
+                    la pantalla, cómo se hacen las cosas, qué reglas tiene y qué significan los mensajes
+                    que pueden aparecer.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    @foreach (var seccion in secciones)
+    {
+        <div class="col-md-6 mb-3">
+            <div class="card card-default h-100 doc-portada">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="@seccion.Icono"></i>&nbsp; @seccion.Titulo
+                    </h3>
+                    <div class="card-tools">
+                        <span class="badge @(seccion.Estado == "listo" ? "badge-success" : "badge-secondary")">
+                            @seccion.Temas
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body d-flex flex-column">
+                    <p>@seccion.Descripcion</p>
+                    <a href="@Url.Action(seccion.Accion, "Documentacion")"
+                       class="btn @(seccion.Estado == "listo" ? "btn-primary" : "btn-secondary") btn-block mt-auto">
+                        <i class="fa fa-book-open"></i>&nbsp;
+                        @(seccion.Estado == "listo" ? "Abrir" : "Ver qué traerá")
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
