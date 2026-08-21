@@ -1,0 +1,549 @@
+﻿@model Compromiso
+@{
+    List<Area> areas = ViewBag.Areas;
+    List<Empleado> empleados = ViewBag.Empleados;
+
+    var fechas = Model.Estados.Select(x => x.FechaRegistro.Date).ToList();
+    if (Model.Instancias != null)
+    {
+        fechas.AddRange(Model.Instancias.Select(x => x.FechaRegistro.Date).ToList());
+    }
+    fechas = fechas.Distinct().ToList();
+
+    List<DateTime> registros;
+    CompromisoEstado compromisoEstado;
+    CompromisoInstancia compromisoInstancia;
+
+    string colorFondo = Model.AreaId.HasValue ? Model.Area.ColorFondo.Clase : "";
+
+}
+<style>
+    .timeline-footer {
+        background-color: #f0f0f0;
+    }
+</style>
+<div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+        <div class="modal-header bg-@colorFondo">
+            <h5 class="modal-title">COMPROMISO Nº @Model.Codigo</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body p-0">
+            <div class="card card-primary card-outline card-outline-tabs mb-0  shadow-none">
+                <div class="card-header p-0 border-bottom-0">
+                    <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="pill" href="#tab1" role="tab">General</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#tab2" role="tab">Asignación</a>
+                        </li>
+
+
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#tab6" role="tab">Verificación</a>
+                        </li>
+
+                        @if (!Model.InstanciaId.HasValue && (Model.Estado == EstadoCompromiso.PROGRAMADO || Model.Estado == EstadoCompromiso.REPROGRAMADO))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="pill" href="#tab7" role="tab">Escalamiento</a>
+                            </li>
+                        }
+
+                        @if (!Model.InstanciaId.HasValue && Model.Estado == EstadoCompromiso.PROGRAMADO)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="pill" href="#tab5" role="tab">Reprogramación</a>
+                            </li>
+                        }
+                        @if (Model.FotoId.HasValue)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" data-toggle="pill" href="#tab4" role="tab">Evidencia</a>
+                            </li>
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#tab3" role="tab">Seguimiento</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <div class="tab-pane fade active show" id="tab1" role="tabpanel">
+                            <div class="form-row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Código:</label>
+                                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.Codigo" />
+                                    </div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="form-group">
+                                        <label>Reportado por:</label>
+                                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.EmpleadoRegistro.Nombre @Model.EmpleadoRegistro.ApellidoPaterno @Model.EmpleadoRegistro.ApellidoMaterno" />
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Reportado desde:</label>
+                                        <input class="form-control form-control-sm" disabled="disabled" value="@ViewBag.Ruta" />
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Descripción Breve:</label>
+                                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.Descripcion" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Fecha Registro:</label>
+                                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Origen:</label>
+                                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.Origen" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label>Impacto en indicador:</label>
+                                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.Impacto" />
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Descripción Detallada:</label>
+                                        <textarea class="form-control form-control-sm" disabled="disabled" rows="4">@Model.Detalle</textarea>
+                                    </div>
+                                </div>
+                                @if (Model.Estado == EstadoCompromiso.FINALIZADO)
+                                {
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label>Respuesta:</label>
+                                            <textarea class="form-control form-control-sm is-valid" disabled="disabled" rows="4">@Model.Respuesta</textarea>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab2" role="tabpanel">
+                            <div class="form-row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Área responsable:</label>
+                                        <select id="AreaId" class="form-control form-control-sm">
+                                            <option value="">NINGUNO</option>
+                                            @foreach (var item in areas)
+                                            {
+                                                <option value="@item.Id" @(item.Id == Model.AreaId ? "selected" : "")>@item.Descripcion</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Responsable:</label>
+                                        <select id="ResponsableId" class="form-control form-control-sm">
+                                            <option value="">NINGUNO</option>
+                                            @foreach (var item in empleados)
+                                            {
+                                                <option value="@item.Id" @(item.Id == Model.ResponsableId ? "selected" : "")>@item.Nombre @item.ApellidoPaterno @item.ApellidoMaterno</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Acción a realizar:</label>
+                                        <textarea class="form-control form-control-sm" id="Accion" rows="4">@Model.Accion</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab3" role="tabpanel">
+                            <div class="timeline mb-1">
+                                @foreach (var item in fechas.OrderByDescending(x => x))
+                                {
+                                    <div class="time-label">
+                                        <span class="bg-red">@item.ToString("dd MMM yyyy")</span>
+                                    </div>
+
+                                    registros = Model.Estados.Where(x => x.FechaRegistro.Date == item).Select(x => x.FechaRegistro).ToList();
+                                    if (Model.Instancias != null)
+                                    {
+                                        registros.AddRange(Model.Instancias.Where(x => x.FechaRegistro.Date == item).Select(x => x.FechaRegistro).ToList());
+                                    }
+
+                                    foreach (var item2 in registros.OrderByDescending(x => x))
+                                    {
+                                        compromisoEstado = Model.Estados.Where(x => x.FechaRegistro == item2).SingleOrDefault();
+
+                                        if (compromisoEstado != null)
+                                        {
+                                            <div>
+                                                @{ GetIcon(compromisoEstado.Estado); }
+                                                <div class="timeline-item">
+                                                    <span class="time"><i class="fas fa-clock"></i> @compromisoEstado.FechaRegistro.ToString("HH:mm")</span>
+                                                    @{ GetHeader(compromisoEstado.Estado); }
+                                                    @{ GetBody(compromisoEstado.Estado); }
+                                                    @if (!string.IsNullOrWhiteSpace(compromisoEstado.Motivo))
+                                                    {
+                                                        <div class="timeline-body" style="white-space: pre-line">@compromisoEstado.Motivo</div>
+                                                    }
+                                                    @{ GetFooter(compromisoEstado, null); }
+                                                </div>
+                                            </div>
+                                        }
+
+                                        if (Model.Instancias != null)
+                                        {
+                                            compromisoInstancia = Model.Instancias.Where(x => x.FechaRegistro == item2).SingleOrDefault();
+                                            if (compromisoInstancia != null)
+                                            {
+                                                <div>
+                                                    <i class="fa fa-table bg-success"></i>
+                                                    <div class="timeline-item">
+                                                        <span class="time"><i class="fas fa-clock"></i> @compromisoInstancia.FechaRegistro.ToString("HH:mm")</span>
+                                                        <h3 class="timeline-header">
+                                                            <a href="javascript:void(0)">@compromisoInstancia.Instancia.Descripcion</a> El compromiso se escaló.
+                                                        </h3>
+                                                        @if (!string.IsNullOrWhiteSpace(compromisoInstancia.Motivo))
+                                                        {
+                                                            <div class="timeline-body" style="white-space: pre-line"><b>Motivo: </b> @compromisoInstancia.Motivo</div>
+                                                        }
+                                                        @{ GetFooter(null, compromisoInstancia); }
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab4" role="tabpanel">
+                            <div class="form-row">
+                                <div class="col-md-12 text-center">
+                                    @if (Model.FotoId.HasValue)
+                                    {
+                                        <img class="img-fluid rounded img-thumbnail" src="/Adjunto/VerFotoBlob/@Model.FotoId.Value" alt="Se visualiza una imagen del compromiso" />
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab5" role="tabpanel">
+                            <div class="form-row">
+                                <div class="col-md-12">
+                                    <div class="alert alert-dismissible alert-warning">
+                                        <h4 class="">Alerta:</h4>
+                                        <p>Recuerde que esta reprogramación se guardará cuando presione el boton REPROGRAMAR</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label>Fecha de Reprogramación</label>
+                                        <div class="input-group">
+                                            <input id="FechaReprogramacion" class="form-control form-control-sm" placeholder="dd/MM/yyyy" />
+                                            <div class="input-group-append">
+                                                <div class="input-group-text">
+                                                    <span class="fa fa-calendar"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab6" role="tabpanel">
+
+                        </div>
+                        <div class="tab-pane fade" id="tab7" role="tabpanel">
+
+                        </div>
+                    </div>
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+        <div id="msgAsignar"></div>
+        <div class="modal-footer d-flex">
+            @if ((Model.InstanciaId.HasValue && (Model.InstanciaId == (int)InstanciaObligatoria.GERENCIA || Model.InstanciaId == (int)InstanciaObligatoria.DIRECCION)) ||
+                (!Model.InstanciaId.HasValue && (Model.Estado == EstadoCompromiso.NUEVO || Model.Estado == EstadoCompromiso.PENDIENTE)))
+            {
+                <div class="mr-auto"><button type="button" class="btn btn-danger" id="btnRechazar" title="Rechazar"><i class="fa fa-trash"></i>&nbsp; Rechazar</button></div>
+            }
+            @if (!Model.InstanciaId.HasValue && (Model.Estado == EstadoCompromiso.PROGRAMADO || Model.Estado == EstadoCompromiso.REPROGRAMADO))
+            {
+                <div class="mr-auto">
+                    <button type="button" class="btn btn-warning" id="btnPorVerificar" title="Por Verificar"><i class="fa fa-check"></i>&nbsp; Por Verificar</button>
+                    @if (Model.Estado == EstadoCompromiso.PROGRAMADO)
+                    {
+
+                        <button type="button" class="btn btn-info" id="btnReprogramar" title="Reprogramar"><i class="fa fa-calendar"></i>&nbsp; Reprogramar</button>
+                    }
+                </div>
+            }
+
+            @if (!Model.InstanciaId.HasValue && Model.Estado == EstadoCompromiso.POR_VERIFICAR)
+            {
+                <div class="mr-auto"><button type="button" class="btn btn-success" id="btnFinalizar" title="Finalizar"><i class="fa fa-check-double"></i>&nbsp; Finalizar</button></div>
+            }
+            <div><button type="button" class="btn btn-primary" id="btnGuardar" title="Guardar"><i class="fa fa-save"></i>&nbsp; Guardar</button></div>
+            <div><button type="button" class="btn btn-danger" data-dismiss="modal" title="Cancelar"><i class="fa fa-times"></i>&nbsp; Cancelar</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var asignar = {
+        ObtenerModelo: function () {
+            var model = {
+                'model.Id': @Model.Id,
+                'model.AreaId': $('#AreaId').val(),
+                'model.ResponsableId': $('#ResponsableId').val(),
+                'model.PorVerificar': $('#PorVerificar').prop('checked'),
+                'model.Accion': $('#Accion').val(),
+                'model.Finalizo': $('#Finalizo').prop('checked'),
+            };
+            return model;
+        },
+        ObtenerModeloReprogramacion: function () {
+            var model = {
+                'model.Id': @Model.Id,
+                'model.FechaReprogramacion': $('#FechaReprogramacion').val()
+            };
+
+            return model;
+        }
+    };
+
+    $(function (){
+        $('#btnGuardar').click(function () {
+            var model = asignar.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Compromiso/Asignar",
+                data: model,
+                beforeSend: function () {
+                    $("#msgAsignar").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    model['id'] = result;
+                    @string.Format("{0}(model);", ViewBag.CallBack)
+                },
+                error: function (result) {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgAsignar', data);
+                    })
+
+                    helper.wait.remove('.modal-footer');
+                    //helper.errorShow('#msgAsignar', result.responseText);
+                    $("#msgAsignar").slideDown();
+                    $('#btnGuardar').removeAttr("disabled");
+                }
+            });
+        });
+
+        $('#btnRechazar').click(function () {
+            var model = asignar.ObtenerModelo();
+            SetRechazar(model);
+        });
+        $('#btnPorVerificar').click(function () {
+            var model = asignar.ObtenerModelo();
+            SetPorVerificar(model);
+        });
+        $('#btnFinalizar').click(function () {
+            var model = asignar.ObtenerModelo();
+            SetFinalizar(model);
+        });
+        $('#btnEscalarGerencia').click(function (){
+            var model = asignar.ObtenerModelo();
+            SetEscalarGerencia(model);
+        });
+
+        $('#AreaId').change(function () {
+            var valor = $(this).val();
+            $('#ResponsableId option').remove();
+            $('#ResponsableId').append('<option value="">SELECCIONE</option>').attr('disabled', 'disabled');
+            if (valor) {
+                $.get('/Empleado/Listar', { 'filtro.AreaId': valor }, function (data) {
+                    var options = $.map(data, function (i) {
+                        return `<option value="${i.Id}">${i.Nombre} ${i.ApellidoPaterno} ${i.ApellidoMaterno}</option>`;
+                    });
+                    $('#ResponsableId').append(options).removeAttr('disabled');
+                });
+            } else $('#ResponsableId').removeAttr('disabled');
+        });
+
+        $('#btnReprogramar').click(function () {
+            var model = asignar.ObtenerModeloReprogramacion();
+            $.ajax({
+                type: "POST",
+                url: "/Compromiso/Reprogramar",
+                data: model,
+                beforeSend: function () {
+                    $("#msgAsignar").hide();
+                    $('#btnReprogramar').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    SetReprogramacion();
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    //helper.errorShow('#msgAsignar', result.responseText);
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgAsignar', data);
+                    })
+                    $("#msgAsignar").slideDown();
+                    $('#btnReprogramar').removeAttr("disabled");
+                }
+            });
+        });
+    });
+</script>
+
+@functions
+{
+    void GetIcon(EstadoCompromiso estado)
+    {
+        switch (estado)
+        {
+            case EstadoCompromiso.NUEVO:
+                <i class="fas fa-envelope bg-blue"></i>
+                break;
+            case EstadoCompromiso.PENDIENTE:
+                <i class="fas fa-clock bg-pink"></i>
+                break;
+            case EstadoCompromiso.FINALIZADO:
+                <i class="fas fa-check-double bg-success"></i>
+                break;
+            case EstadoCompromiso.PROGRAMADO:
+                <i class="fas fa-calendar bg-info"></i>
+                break;
+            case EstadoCompromiso.REPROGRAMADO:
+                <i class="fas fa-calendar-plus bg-info"></i>
+                break;
+            case EstadoCompromiso.POR_VERIFICAR:
+                <i class="fa fa-user-check bg-warning"></i>
+                break;
+            case EstadoCompromiso.FUERA_DE_FECHA:
+                <i class="fa fa-calendar-minus bg-danger"></i>
+                break;
+            default:
+                break;
+        }
+    }
+
+    void GetHeader(EstadoCompromiso estado)
+    {
+        switch (estado)
+        {
+            case EstadoCompromiso.NUEVO:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a> Se registro el compromiso
+                </h3>
+                break;
+            case EstadoCompromiso.PENDIENTE:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a>
+                </h3>
+                break;
+            case EstadoCompromiso.PROGRAMADO:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a>
+                </h3>
+                break;
+            case EstadoCompromiso.REPROGRAMADO:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a>
+                </h3>
+                break;
+            case EstadoCompromiso.FINALIZADO:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a> Se finalizó el compromiso
+                </h3>
+                break;
+            case EstadoCompromiso.POR_VERIFICAR:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString().Replace("_", " ")</a>
+                </h3>
+                break;
+            case EstadoCompromiso.FUERA_DE_FECHA:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString().Replace("_", " ")</a>
+                </h3>
+                break;
+            default:
+                break;
+        }
+    }
+
+    void GetBody(EstadoCompromiso estado)
+    {
+        switch (estado)
+        {
+            case EstadoCompromiso.RECHAZADO:
+            case EstadoCompromiso.FINALIZADO:
+                <div class="timeline-body">
+                    @Model.Respuesta
+                </div>
+                break;
+            default:
+                break;
+        }
+    }
+
+    void GetFooter(CompromisoEstado estado, CompromisoInstancia instancia)
+    {
+        if (estado != null)
+        {
+            if (estado.UsuarioId.HasValue || estado.EmpleadoId.HasValue)
+            {
+                <div class="timeline-footer">
+                    @if (estado.UsuarioId.HasValue)
+                    {
+                        <p class="mb-0"><b>Usuario: </b> @estado.Usuario.Nombre</p>
+                    }
+                    @if (estado.EmpleadoId.HasValue)
+                    {
+                        <p class="mb-0"><b>Empleado: </b> @estado.Empleado.Nombre @estado.Empleado.ApellidoPaterno</p>
+                    }
+                </div>
+            }
+        }
+        if (instancia != null)
+        {
+            if (instancia.UsuarioId.HasValue || instancia.EmpleadoId.HasValue)
+            {
+                <div class="timeline-footer">
+                    @if (instancia.UsuarioId.HasValue)
+                    {
+                        <p class="mb-0"><b>Usuario: </b> @instancia.Usuario.Nombre</p>
+
+                    }
+                    @if (instancia.EmpleadoId.HasValue)
+                    {
+                        <p class="mb-0"><b>Empleado: </b> @instancia.Empleado.Nombre @instancia.Empleado.ApellidoPaterno</p>
+                    }
+                </div>
+            }
+        }
+    }
+}

@@ -1,0 +1,246 @@
+﻿
+@model Verificar
+@{
+    ViewBag.Title = "Ver Verificación";
+    List<Categoria> categorias = Model.Respuestas.GroupBy(x => x.CategoriaId).Select(x => x.First().Categoria).ToList();
+    double puntajeObtenido = (double.Parse(Model.PuntajeObtenido.ToString()) / double.Parse(Model.PuntajeMaximo.ToString())) * 100;
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="fas fa-user-tag"></i>&nbsp;Detalles de la verificación
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="col-3">
+                        <div class="form-group">
+                            <label>Fecha:</label>
+                            <input class="form-control form-control-sm" placeholder="Fecha" value="@Model.FechaRegistro.ToString("dd/MM/yyyy")" disabled />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-group">
+                            <label>Hora:</label>
+                            <input class="form-control form-control-sm" placeholder="Hora" value="@Model.FechaRegistro.ToString("HH:mm")" disabled />
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Observador:</label>
+                            <input class="form-control form-control-sm" placeholder="Observador" value="@Model.Empleado.Nombre @Model.Empleado.ApellidoPaterno" disabled />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Tablero:</label>
+                            <input class="form-control form-control-sm" disabled="disabled" value="@Model.Tablero.Descripcion" />
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label>Observado:</label>
+                            <input class="form-control form-control-sm" disabled="disabled" value="@Model.Encargado" />
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.InstructivoEstandar))
+                    {
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="InstructivoEstandar">Instructivo Estándar / Gestión Industrial:</label>
+                                <textarea class="form-control form-control-sm" rows="4" id="InstructivoEstandar" disabled="disabled">@Model.InstructivoEstandar</textarea>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <hr />
+                <div class="text-center">
+                    <a role="button" class="btn btn-warning" href="/Verificacion/Index"><i class="fa fa-chevron-left"></i>&nbsp; Retroceder</a>
+                </div>
+                <div id="msgEditar" class="mt-1"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        @foreach (var item in categorias.OrderBy(x => x.Orden))
+        {
+            <div class="col-12">
+                <div class="card card-default">
+                    <div class="card-header bg-blue">
+                        <h3 class="card-title text-white">@item.Orden.&nbsp;@item.Descripcion</h3>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var item2 in Model.Respuestas.Where(x => x.CategoriaId == item.Id))
+                        {
+                            <div class="form-row pb-1 pt-1 border-bottom">
+                                <div class="col-md-6 mb-1">
+                                    @if (!string.IsNullOrEmpty(item2.Pregunta.Titulo))
+                                    {
+                                        <b>@item2.Pregunta.Titulo: </b>
+                                    }
+                                    <p class="mb-0" style="white-space: pre-line">@item2.Pregunta.Descripcion</p>
+                                </div>
+                                <div class="col d-flex align-items-center text-info">
+                                    @item2.Descripcion
+                                </div>
+                                <div class="col d-flex align-items-center text-success">
+                                    <b><i>@item2.Valor</i></b>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-12">
+        <div class="card card-info">
+            <div class="card-header">
+                <h3 class="card-title text-white">FeedBack</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Nota:</label>
+                            <input class="form-control form-control-sm font-weight-bold text-center" disabled value="@Model.PuntajeObtenido/@Model.PuntajeMaximo" id="Nota" />
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Puntaje Total:</label>
+                            <input class="form-control  form-control-sm font-weight-bold text-center" disabled value="@puntajeObtenido.ToString("##0.0") %" id="PuntajeTotal" />
+                        </div>
+                    </div>
+                    @if (Model.Rom.HasValue)
+                    {
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label>¿Requiere ROM?:</label>
+                                <input class="form-control form-control-sm" value="@(Model.Rom.Value ? "SI" : "NO")" disabled="disabled" />
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label>Nº ROM:</label>
+                                <input class="form-control form-control-sm" value="@Model.NroRom" disabled="disabled" />
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Fortaleza))
+                    {
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="Fortaleza">Fortalezas:</label>
+                                <textarea id="Fortaleza" class="form-control form-control-sm" rows="4" disabled="disabled">@Model.Fortaleza</textarea>
+                            </div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.Oportunidad))
+                    {
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="Oportunidad">Oportunidades:</label>
+                                <textarea id="Oportunidad" class="form-control form-control-sm" rows="4" disabled="disabled">@Model.Oportunidad</textarea>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.PlanesAccion != null && Model.PlanesAccion.Count > 0)
+                    {
+                        int i = 0;
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="PlanAccion">Planes de Accion:</label>
+
+                                <div class="table-responsive">
+                                    <table id="tblPlanAccion" class="table table-sm table-bordered table-hover">
+                                        <thead>
+                                            <tr class="bg-secondary">
+                                                <th width="20"></th>
+                                                <th>Accion</th>
+                                                <th width="50"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Model.PlanesAccion)
+                                            {
+                                                <tr>
+                                                    <td class="text-right">@(++i)</td>
+                                                    <td>@item.Descripcion</td>
+                                                    <td class="text-center">
+                                                        @if (item.Compromiso != null)
+                                                        {
+                                                            <a class="option ver-compromiso text-info" title="Información" data-id="@item.Compromiso.Id"><i class="fa fa-eye"></i></a>
+                                                            <a class="ml-1 option seguimiento-compromiso text-success" title="Seguimiento" data-id="@item.Compromiso.Id"><i class="fa fa-calendar-alt"></i></a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <a class="option crear-compromiso text-warning" title="Crear compromiso" data-id="@item.Id"><i class="fas fa-user-tag"></i></a>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+
+<script>
+    var ver = {
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                    helper.errorShow('#Error', result.responseText);
+                }
+            });
+        }
+    };
+
+    $(function () {
+        $('#tblPlanAccion tbody').delegate('a.crear-compromiso', 'click', function () {
+            var id = $(this).data('id');
+            ver.AbrirModal('/Compromiso/NuevoPorPlanAccion', { planAccionId: id, tableroId: @Model.TableroId });
+        });
+        $('#tblPlanAccion tbody').delegate('a.ver-compromiso', 'click', function () {
+            var id = $(this).data('id');
+            ver.AbrirModal('/Compromiso/Ver', { id });
+        });
+        $('#tblPlanAccion tbody').delegate('a.seguimiento-compromiso', 'click', function () {
+            var id = $(this).data('id');
+            ver.AbrirModal('/Compromiso/Seguimiento', { id });
+        });
+    });
+
+    var SetCompromiso = function () {
+        $('#modal-ventana').modal('hide');
+        location.reload();
+    }
+</script>

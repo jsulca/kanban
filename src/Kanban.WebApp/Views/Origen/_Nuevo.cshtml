@@ -1,0 +1,75 @@
+﻿@model Origen
+<div class="modal-dialog animated bounceInDown">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Nuevo Origen</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="Descripcion">Nombre: <span class="text-danger">(*)</span></label>
+                        @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="Activo">Activo:</label>
+                        @Html.CheckBoxFor(m => m.Activo)
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="msgEditar"></div>
+        <div class="modal-footer">
+            <button id="btnGuardar" type="button" class="btn btn-sm btn-primary"><i class="fa fa-check"></i>&nbsp; Guardar</button>
+            <a href="javascript:void(0)" class="btn btn-sm btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp; Cancelar</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var nuevo = {
+        ObtenerModelo: function () {
+            var model = {
+                'nombre': $('#Nombre').val(),
+                'activo': $('#Activo').prop('checked'),
+            };
+            return model;
+        }
+    };
+    $(function () {
+        $('#btnGuardar').click(function () {
+            var model = nuevo.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Origen/Nuevo",
+                data: model,
+                beforeSend: function () {
+                    $("#msgEditar").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    model['id'] = result;
+                    @string.Format("{0}(model);", ViewBag.CallBack)
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    //helper.errorShow('#msgEditar', result.responseText);
+                    $("#msgEditar").slideDown();
+                    $('#btnGuardar').removeAttr("disabled");
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgEditar', data);
+                    })
+                }
+            });
+        });
+    });
+</script>

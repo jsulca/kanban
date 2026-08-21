@@ -1,0 +1,265 @@
+﻿@model Estructura
+@{
+    List<Instancia> instancias = ViewBag.Instancias;
+    List<Area> areas = ViewBag.Areas;
+    List<Empleado> empleados = ViewBag.Empleados;
+}
+<div class="modal-dialog modal-lg animated bounceInDown">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Modelar Tablero</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body p-0">
+            <div class="card card-warning card-outline card-outline-tabs mb-0 shadow-none">
+                <div class="card-header p-0 border-bottom-0">
+                    <ul class="nav nav-tabs" id="custom-tabs-three-tab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-toggle="pill" href="#tab-1" role="tab">Instancias</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#tab-2" role="tab">Áreas</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#tab-3" role="tab">Confirmadores</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-toggle="pill" href="#tab-4" role="tab">Sostenibilidad</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body p-2">
+                    <div class="tab-content">
+                        <div class="tab-pane fade active show" id="tab-1" role="tabpanel">
+                            <div class="table-responsive">
+                                <table id="tblInstancias" class="table table-sm table-borderless table-hover mb-0">
+                                    <tbody>
+                                        @foreach (var item in instancias)
+                                        {
+                                            <tr>
+                                                <td><label for="Instancia_@item.Id">@item.Descripcion</label> </td>
+                                                <td class="text-center" width="50"><input id="Instancia_@item.Id" type="checkbox" value="@item.Id" @(Model.Instancias.Any(x => x.InstanciaId == item.Id) ? "checked" : "") /></td>
+                                            </tr>
+
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-2" role="tabpanel">
+                            <div class="table-responsive">
+                                <table id="tblAreas" class="table table-sm table-borderless table-hover mb-0">
+                                    <tbody>
+                                        @foreach (var item in areas)
+                                        {
+                                            <tr>
+                                                <td><label for="Area_@item.Id">@item.Descripcion</label> </td>
+                                                <td class="text-center" width="50"><input id="Area_@item.Id" type="checkbox" value="@item.Id" @(Model.Areas.Any(x => x.AreaId == item.Id) ? "checked" : "") /></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-3" role="tabpanel">
+                            <div class="text-center">
+                                <button type="button" id="btnNuevoEmpleado" class="btn btn-sm btn-success"><i class="fa fa-plus"></i>&nbsp; Nuevo</button>
+                            </div>
+                            <hr />
+                            <div class="table-responsive">
+                                <table id="tblEmpleados" class="table table-sm table-bordered table-hover mb-0">
+                                    <thead>
+                                        <tr class="bg-success">
+                                            <th width="20"></th>
+                                            <th width="200">Area</th>
+                                            <th>Nombre Completo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Empleados.OrderBy(x => x.EmpleadoId))
+                                        {
+                                            <tr>
+                                                <td class="text-center"><a href="javascript:void(0)" class="eliminar"><i class="fa fa-trash-alt text-danger"></i></a></td>
+                                                <td>
+                                                    <select class="form-control form-control-sm area">
+                                                        @foreach (var item2 in areas)
+                                                        {
+                                                            <option value="@item2.Id" @(item2.Id == item.AreaId ? "selected" : "")>@item2.Descripcion</option>
+                                                        }
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control form-control-sm empleado">
+                                                        @foreach (var item2 in empleados.OrderBy(x => x.Nombre).ThenBy(x => x.ApellidoPaterno))
+                                                        {
+                                                            <option data-areaid="@item2.AreaId" value="@item2.Id" @(item2.Id == item.EmpleadoId ? "selected" : "")>@item2.Nombre @item2.ApellidoPaterno @item2.ApellidoMaterno</option>
+                                                        }
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-4" role="tabpanel">
+                            <div class="text-center">
+                                <button type="button" id="btnNuevoEmpleadoSostenibilidad" class="btn btn-sm btn-success"><i class="fa fa-plus"></i>&nbsp; Nuevo</button>
+                            </div>
+                            <hr />
+                            <div class="table-responsive">
+                                <table id="tblEmpleadossostenibilidad" class="table table-sm table-bordered table-hover mb-0">
+                                    <thead>
+                                        <tr class="bg-success">
+                                            <th width="20"></th>
+                                            <th>Nombre Completo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Sostenibilidades)
+                                        {
+                                            <tr>
+                                                <td class="text-center"><a href="javascript:void(0)" class="eliminar"><i class="fa fa-trash-alt text-danger"></i></a></td>
+                                                <td>
+                                                    <select class="form-control form-control-sm empleado">
+                                                        @foreach (var item2 in empleados.OrderBy(x => x.Nombre).ThenBy(x => x.ApellidoPaterno))
+                                                        {
+                                                            <option value="@item2.Id" @(item2.Id == item.EmpleadoId ? "selected" : "")>@item2.Nombre @item2.ApellidoPaterno @item2.ApellidoMaterno</option>
+                                                        }
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="msgEditar"></div>
+        <div class="modal-footer">
+            <button id="btnGuardar" type="button" class="btn btn-sm btn-primary"><i class="fa fa-save"></i>&nbsp; Guardar</button>
+            <a href="javascript:void(0)" class="btn btn-sm btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp; Cancelar</a>
+        </div>
+    </div>
+</div>
+<script>
+    var modelarTablero = {
+        ObtenerModelo: function () {
+            var model = {
+                id: @Model.Id,
+                instancias: [],
+                areas: [],
+                empleados: [],
+                sostenibilidades: []
+            };
+
+            model.instancias = $.map($('#tblInstancias input[type="checkbox"]:checked'), function (i, r) {
+                return { instanciaId: i.value };
+            });
+
+            model.areas = $.map($('#tblAreas input[type="checkbox"]:checked'), function (i, r) {
+                return { areaId: i.value };
+            });
+
+            model.empleados = $.map($('#tblEmpleados tbody tr'), function (tr, i) {
+                return {
+                    areaId: $(tr).find('select.area').val(),
+                    empleadoId: $(tr).find('select.empleado').val()
+                };
+            });
+
+            model.sostenibilidades = $.map($('#tblEmpleadossostenibilidad tbody tr'), function (tr, i) {
+                return { empleadoId: $(tr).find('select.empleado').val() };
+            });
+
+            return model;
+        },
+        EmpleadoSelect: function () {
+            return `<select class="form-control form-control-sm empleado">
+            @foreach(var item in empleados.OrderBy(x => x.Nombre).ThenBy(x => x.ApellidoPaterno))
+            {
+                <option data-areaid="@item.AreaId" value="@item.Id">@item.Nombre @item.ApellidoPaterno @item.ApellidoMaterno</option>
+            }
+            </select>`
+        },
+        AreaSelect: function () {
+            return `<select class="form-control form-control-sm area">
+            @foreach(var item in areas)
+            {
+                <option value="@item.Id" @(item.Id == empleados[0].AreaId ? "selected" : "")>@item.Descripcion</option>
+            }
+            </select>`
+        }
+    };
+
+    $(function () {
+        $('#btnNuevoEmpleado').click(function () {
+            var tr = `<tr>
+                    <td class="text-center"><a href="javascript:void(0)" class="eliminar"><i class="fa fa-trash-alt text-danger"></i></a></td>
+                    <td>${modelarTablero.AreaSelect()}</td>
+                    <td>${modelarTablero.EmpleadoSelect()}</td>
+                </tr>`;
+            $('#tblEmpleados tbody').append(tr);
+        });
+        $('#btnNuevoEmpleadoSostenibilidad').click(function () {
+            var tr = `<tr>
+                    <td class="text-center"><a href="javascript:void(0)" class="eliminar"><i class="fa fa-trash-alt text-danger"></i></a></td>
+                    <td>${modelarTablero.EmpleadoSelect()}</td>
+                </tr>`;
+            $('#tblEmpleadossostenibilidad tbody').append(tr);
+        });
+
+        $('#tblEmpleados tbody').delegate('select.empleado', 'change', function () {
+            var opcion = $(this).find('option:selected');
+            var tr = $(this).parents().eq(1);
+            var area = tr.find('select.area');
+            area.val(opcion.data('areaid'));
+        });
+
+        $('#tblEmpleados tbody').delegate('a.eliminar', 'click', function () {
+            var tr = $(this).parents().eq(1);
+            tr.remove();
+        });
+
+        $('#tblEmpleadossostenibilidad tbody').delegate('a.eliminar', 'click', function () {
+            var tr = $(this).parents().eq(1);
+            tr.remove();
+        });
+
+        $('#btnGuardar').click(function () {
+            var model = modelarTablero.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Estructura/ModelarTablero",
+                data: model,
+                beforeSend: function () {
+                    $("#msgEditar").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    model['id'] = result;
+                    @string.Format("{0}(model);", ViewBag.CallBack)
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    //helper.errorShow('#msgEditar', result.responseText);
+                    $("#msgEditar").slideDown();
+                    $('#btnGuardar').removeAttr("disabled");
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgEditar', data);
+                    })
+                }
+            });
+
+        });
+    });
+</script>

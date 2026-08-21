@@ -1,0 +1,76 @@
+﻿@{
+    Layout = "~/Views/Shared/_LayoutAccount.cshtml";
+}
+@model Usuario
+@using (Html.BeginForm("Login", "Account", new { @ReturnUrl = ViewData["ReturnUrl"] }, FormMethod.Post, null, new { @id = "formLogin" }))
+{
+    <div class="input-group mb-3">
+        @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control", placeholder = "Usuario", @autofocus = "true", autocomplete = "off" })
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-user"></span>
+            </div>
+        </div>
+    </div>
+    <div class="input-group mb-3">
+        @Html.PasswordFor(m => m.Clave, new { @class = "form-control", placeholder = "Clave", autocomplete = "off" })
+        <div class="input-group-append">
+            <div class="input-group-text">
+                <span class="fas fa-lock"></span>
+            </div>
+        </div>
+    </div>
+    if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Error!</strong>
+            @{
+                Html.RenderPartial("_Error");
+            }
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+    <div class="row">
+        <div class="col-12 text-right">
+            <button type="submit" class="btn btn-danger btn-block">Ingresar</button>
+            @*<button type="button" class="btn btn-danger btn-block" id="btnLogin" disabled="disabled">Ingresar</button>*@
+        </div>
+        @*<div class="col-12 mt-1 d-flex justify-content-center">
+                <div class="g-recaptcha" data-callback="setToken" data-sitekey="@AppSettings.RECAPTCHA_WEB_TOKEN"></div>
+            </div>*@
+
+        <div class="col-12 text-center mt-2">
+            <div class="row">
+                <div class="col-12">
+                    <img src="@Url.Action("Captcha", "Account")" alt="Captcha" class="img-rounded" id="Captcha" />
+                </div>
+                <div class="col-12">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Ingresar el texto de la imagen" name="recaptcha"  />
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-info" id="btnRenovar"><span class="fa fa-redo-alt"></span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@*<script src="https://www.google.com/recaptcha/api.js" async defer></script>*@
+<script>
+
+    //var setToken = function (token) {
+    //    $('#btnLogin').removeAttr('disabled')
+    //    $('#formLogin').prepend(`<input type="hidden" name="recaptcha" value="${token}" />`)
+    //}
+
+    $(function () {
+        $('#btnRenovar').click(function () {
+            $('#Captcha').removeAttr('src')
+            $('#Captcha').attr('src', `/Account/Captcha?${Date.now()}`)
+        })
+    })
+</script>

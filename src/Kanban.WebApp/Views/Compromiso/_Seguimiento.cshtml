@@ -1,0 +1,220 @@
+﻿@model Compromiso
+@{
+    var fechas = Model.Estados.Select(x => x.FechaRegistro.Date).ToList();
+    if (Model.Instancias != null)
+    {
+        fechas.AddRange(Model.Instancias.Select(x => x.FechaRegistro.Date).ToList());
+    }
+    fechas = fechas.Distinct().ToList();
+
+    List<DateTime> registros;
+    CompromisoEstado compromisoEstado;
+    CompromisoInstancia compromisoInstancia;
+}
+<style>
+    .timeline-footer {
+        background-color: #f0f0f0;
+    }
+</style>
+<div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">SEGUIMIENTO COMPROMISO</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body bg-gray-light">
+            <div class="timeline mb-1">
+                @foreach (var item in fechas.OrderByDescending(x => x))
+                {
+                    <div class="time-label">
+                        <span class="bg-red">@item.ToString("dd MMM yyyy")</span>
+                    </div>
+
+                    registros = Model.Estados.Where(x => x.FechaRegistro.Date == item).Select(x => x.FechaRegistro).ToList();
+                    if (Model.Instancias != null)
+                    {
+                        registros.AddRange(Model.Instancias.Where(x => x.FechaRegistro.Date == item).Select(x => x.FechaRegistro).ToList());
+                    }
+
+                    foreach (var item2 in registros.OrderByDescending(x => x))
+                    {
+                        compromisoEstado = Model.Estados.Where(x => x.FechaRegistro == item2).SingleOrDefault();
+
+                        if (compromisoEstado != null)
+                        {
+                            <div>
+                                @{ GetIcon(compromisoEstado.Estado); }
+                                <div class="timeline-item">
+                                    <span class="time"><i class="fas fa-clock"></i> @compromisoEstado.FechaRegistro.ToString("HH:mm")</span>
+                                    @{ GetHeader(compromisoEstado.Estado); }
+                                    @{ GetBody(compromisoEstado.Estado); }
+                                    @if (!string.IsNullOrWhiteSpace(compromisoEstado.Motivo))
+                                    {
+                                        <div class="timeline-body" style="white-space: pre-line">@compromisoEstado.Motivo</div>
+                                    }
+                                    @{ GetFooter(compromisoEstado, null); }
+                                </div>
+                            </div>
+                        }
+
+                        if (Model.Instancias != null)
+                        {
+                            compromisoInstancia = Model.Instancias.Where(x => x.FechaRegistro == item2).SingleOrDefault();
+                            if (compromisoInstancia != null)
+                            {
+                                <div>
+                                    <i class="fa fa-table bg-success"></i>
+                                    <div class="timeline-item">
+                                        <span class="time"><i class="fas fa-clock"></i> @compromisoInstancia.FechaRegistro.ToString("HH:mm")</span>
+                                        <h3 class="timeline-header">
+                                            <a href="javascript:void(0)">@compromisoInstancia.Instancia.Descripcion</a> El compromiso se escaló.
+                                        </h3>
+                                        @if (!string.IsNullOrWhiteSpace(compromisoInstancia.Motivo))
+                                        {
+                                            <div class="timeline-body" style="white-space: pre-line"><b>Motivo: </b> @compromisoInstancia.Motivo</div>
+                                        }
+                                        @{ GetFooter(null, compromisoInstancia); }
+                                    </div>
+                                </div>
+                            }
+                        }
+                    }
+                }
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal"><i class="fa fa-check"></i>&nbsp; Aceptar</button>
+        </div>
+    </div>
+</div>
+
+@functions
+{
+    void GetIcon(EstadoCompromiso estado)
+    {
+        switch (estado)
+        {
+            case EstadoCompromiso.NUEVO:
+                <i class="fas fa-envelope bg-blue"></i>
+                break;
+            case EstadoCompromiso.PENDIENTE:
+                <i class="fas fa-clock bg-pink"></i>
+                break;
+            case EstadoCompromiso.FINALIZADO:
+                <i class="fas fa-check-double bg-success"></i>
+                break;
+            case EstadoCompromiso.PROGRAMADO:
+                <i class="fas fa-calendar bg-info"></i>
+                break;
+            case EstadoCompromiso.REPROGRAMADO:
+                <i class="fas fa-calendar-plus bg-info"></i>
+                break;
+            case EstadoCompromiso.POR_VERIFICAR:
+                <i class="fa fa-user-check bg-warning"></i>
+                break;
+            case EstadoCompromiso.RECHAZADO:
+                <i class="fa fa-trash-alt bg-danger"></i>
+                break;
+            case EstadoCompromiso.FUERA_DE_FECHA:
+                <i class="fa fa-calendar-minus bg-danger"></i>
+                break;
+            default:
+                break;
+        }
+    }
+
+    void GetHeader(EstadoCompromiso estado)
+    {
+        switch (estado)
+        {
+            case EstadoCompromiso.NUEVO:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a> Se registro el compromiso
+                </h3>
+                break;
+            case EstadoCompromiso.PENDIENTE:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a>
+                </h3>
+                break;
+            case EstadoCompromiso.PROGRAMADO:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a>
+                </h3>
+                break;
+            case EstadoCompromiso.REPROGRAMADO:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a>
+                </h3>
+                break;
+            case EstadoCompromiso.FINALIZADO:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString()</a>
+                </h3>
+                break;
+            case EstadoCompromiso.RECHAZADO:
+            case EstadoCompromiso.POR_VERIFICAR:
+            case EstadoCompromiso.FUERA_DE_FECHA:
+                <h3 class="timeline-header">
+                    <a href="javascript:void(0)">@estado.ToString().Replace("_", " ")</a>
+                </h3>
+                break;
+            default:
+                break;
+        }
+    }
+
+    void GetBody(EstadoCompromiso estado)
+    {
+        switch (estado)
+        {
+            case EstadoCompromiso.RECHAZADO:
+            case EstadoCompromiso.FINALIZADO:
+                <div class="timeline-body">
+                    @Model.Respuesta
+                </div>
+                break;
+            default:
+                break;
+        }
+    }
+
+    void GetFooter(CompromisoEstado estado, CompromisoInstancia instancia)
+    {
+        if (estado != null)
+        {
+            if (estado.UsuarioId.HasValue || estado.EmpleadoId.HasValue)
+            {
+                <div class="timeline-footer">
+                    @if (estado.UsuarioId.HasValue)
+                    {
+                        <p class="mb-0"><b>Usuario: </b> @estado.Usuario.Nombre</p>
+                    }
+                    @if (estado.EmpleadoId.HasValue)
+                    {
+                        <p class="mb-0"><b>Empleado: </b> @estado.Empleado.Nombre @estado.Empleado.ApellidoPaterno</p>
+                    }
+                </div>
+            }
+        }
+        if (instancia != null)
+        {
+            if (instancia.UsuarioId.HasValue || instancia.EmpleadoId.HasValue)
+            {
+                <div class="timeline-footer">
+                    @if (instancia.UsuarioId.HasValue)
+                    {
+                        <p class="mb-0"><b>Usuario: </b> @instancia.Usuario.Nombre</p>
+
+                    }
+                    @if (instancia.EmpleadoId.HasValue)
+                    {
+                        <p class="mb-0"><b>Empleado: </b> @instancia.Empleado.Nombre @instancia.Empleado.ApellidoPaterno</p>
+                    }
+                </div>
+            }
+        }
+    }
+}

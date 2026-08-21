@@ -1,0 +1,21 @@
+﻿@{
+    string[] errores = ViewBag.Errores;
+}
+
+@if (errores != null && errores.Length > 0)
+{
+    <ul>
+        @foreach (string item in errores)
+        {
+            <li>@item</li>
+        }
+    </ul>
+}
+else if (!ViewData.ModelState.IsValid)
+{
+    @Html.ValidationSummary("", "")
+}
+else if (ViewBag.Message != null)
+{
+    @ViewBag.Message
+}

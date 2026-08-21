@@ -1,0 +1,42 @@
+﻿@model Usuario
+@{
+    List<Intento> intentos = ViewBag.Lista;
+}
+<div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Intentos fallidos en el inicio de sesión</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true"></span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover mb-0">
+                    <caption class="pb-0">Los ultimos @ViewBag.CantidadRegistros registros</caption>
+                    <thead>
+                        <tr class="bg-info">
+                            <th width="20">#</th>
+                            <th>Descripción</th>
+                            <th width="120">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var item in intentos)
+                        {
+                            <tr>
+                                <td class="text-right">@(intentos.IndexOf(item) + 1)</td>
+                                <td>@item.Descripcion</td>
+                                <td class="text-center">@item.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div id="msgEditar"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal"><i class="fa fa-close"></i>&nbsp;Cancelar</button>
+        </div>
+    </div>
+</div>

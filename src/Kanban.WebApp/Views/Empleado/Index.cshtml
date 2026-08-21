@@ -1,0 +1,133 @@
+﻿
+@{
+    ViewBag.Title = "Lista de Empleados";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-success-border">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fab fa-buromobelexperte"></i>&nbsp;@ViewBag.Title</h3>
+                <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+            </div>
+            <div class="card-body">
+                <div id="Error"></div>
+                <div class="text-right">
+                    <button id="btnNuevo" type="button" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp; Nuevo</button>
+                    <a href="/Empleado/Masivo" class="btn btn-warning btn-sm"><i class="fa fa-user-plus"></i>&nbsp; Registro Masivo</a>
+                </div>
+                <hr />
+                <div class="table-responsive">
+                    <table id="tblEmpleado" class="table table-sm table-bordered table-hover">
+                        <thead>
+                            <tr class="bg-primary">
+                                <th width="20"></th>
+                                <th width="20">#</th>
+                                <th width="20">Cargo</th>
+                                <th width="20">Area</th>
+                                <th width="20">Nombres</th>
+                                <th width="20">Apellido Paterno</th>
+                                <th width="20">Apellido Materno</th>
+                                <th width="20">Nro. Documento</th>
+                                <th width="20">Correo</th>
+                                <th width="20">Telefono</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+
+<script>
+    var index = {
+        Listar: function () {
+            var table = $("#tblEmpleado");
+            $.ajax({
+                url: "/Empleado/Listar",
+                type: "GET",
+                dataType: "json",
+                beforeSend: function (xhr) { },
+                complete: function () { },
+                success: function (data) {
+                    if (data.length == 0) table.children('tbody').append("<tr><td colspan='10' class='text-center'>No existen registros</td></tr>");
+                    else index.GenerarTabla(table, data);
+                },
+                error: function (data) {
+                    //helper.errorShow('#Error', data.responseText)
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            var rows = '';
+            $.each(lista, function (i, r) {
+                rows += `<tr>
+                            <td><a class="text-warning option editar" data-id="${r.Id}"><i class="fa fa-pencil-alt"></i></a></td>
+                            <td class="text-right">${i + 1}</td>
+                            <td class="text-center">${ r.Cargo.Descripcion || ""}</td>
+                            <td class="text-center">${ r.Area.Descripcion || ""}</td>
+                            <td class="text-center">${ r.Nombre}</td>
+                            <td class="text-center">${ r.ApellidoPaterno}</td>
+                            <td class="text-center">${ r.ApellidoMaterno}</td>
+                            <td class="text-center">${ r.NroDocumento}</td>
+                            <td class="text-center">${ r.Correo || ""}</td>
+                            <td class="text-center">${ r.Telefono || ""}</td>
+                        </tr>`;
+            });
+            tbody.append(rows);
+        },
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                    //helper.errorShow('#Error', result.responseText);
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        }
+    };
+
+
+    $(function () {
+        index.Listar();
+
+        $('#btnNuevo').click(function () {
+            index.AbrirModal('/Empleado/Nuevo', { callBack: 'SetEmpleado' });
+        });
+
+        $('#tblEmpleado tbody').delegate('a.editar', 'click', function () {
+            var id = this.dataset.id;
+            index.AbrirModal('/Empleado/Editar', { callBack: 'SetEmpleado', id });
+        });
+
+    });
+
+    var SetEmpleado = function () {
+        $('#modal-ventana').modal('hide');
+        index.Listar();
+    }
+</script>

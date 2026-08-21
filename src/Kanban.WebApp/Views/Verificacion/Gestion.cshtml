@@ -1,0 +1,644 @@
+﻿@model Estructura
+@{
+    List<EstructuraEmpleado> empleados = ViewBag.Empleados;
+    List<Sostenibilidad> sostenibilidades = ViewBag.Sostenibilidades;
+    List<Verificar> verificaciones = ViewBag.Verificaciones;
+    List<Verificar> verificacionesSostenibilidad = ViewBag.VerificacionesSostenibilidad;
+
+    List<ConfirmadorSemana> semanas = ViewBag.ConfirmadorSemana;
+    List<ConfirmadorComentario> comentarios = ViewBag.ConfirmadorComentario;
+    List<SostenibilidadMes> meses = ViewBag.SostenibilidadMes;
+
+    ConfirmadorSemana confirmadorSemana;
+    ConfirmadorComentario confirmadorComentario;
+    SostenibilidadMes sostenibilidadMes;
+
+    List<TipoVerificacion> tiposVerificacion = ViewBag.TiposVerificacion;
+    int areaId = 0, cantidadFilas = 0;
+    bool mismaArea = false;
+    ViewBag.Title = "Tablero de confirmación";
+    string[] monthNames = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthGenitiveNames;
+    bool primeraSostenibilidad = true;
+}
+<style>
+    .bg-blue-dark {
+        background-color: #0a3563 !important;
+        color: white;
+    }
+
+    .opacity-4 {
+        opacity: 0.4;
+    }
+
+    .opacity-8 {
+        opacity: 0.8;
+    }
+
+    tbody td,
+    tbody th {
+        vertical-align: middle !important;
+    }
+
+    .w-200px {
+        width: 180px;
+        max-width: 180px;
+    }
+</style>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title"><i class="far fa-chart-bar nav-icon"></i>&nbsp; TABLERO @Model.Descripcion</h3>
+                <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+            </div>
+            <div class="card-body">
+                <div id="Error"></div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-success" id="btnGuardar" hidden="hidden"><i class="fa fa-save"></i>&nbsp; Guardar</button>
+                    <button type="button" class="btn btn-primary" id="btnEditar"><i class="fa fa-pencil-alt"></i>&nbsp; Editar</button>
+                    <a href="/Verificacion/Tablero" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="card card-dark">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="tblVerificaciones" class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th class="bg-gray-light">Año</th>
+                                <th class="bg-gray-light">Mes</th>
+                                @foreach (var item in tiposVerificacion)
+                                {
+                                    <th colspan="@(8 + (item.VP ? 1 : 0) + (item.IGP ? 1 : 0))" rowspan="2" class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")">@item.Nombre</th>
+                                }
+                                <th class="bg-danger" rowspan="3">
+                                    Estandar Priorizado por Gerencia
+                                </th>
+                            </tr>
+                            <tr>
+                                <th>
+                                    <select class="form-control form-control-sm" id="Anio">
+                                        @for (int i = DateTime.Today.Year; i > 2015; i--)
+                                        {
+                                            <option value="@i" @(DateTime.Today.Year == i ? "selected" : "")>@i</option>
+                                        }
+                                    </select>
+                                </th>
+                                <th>
+                                    <select class="form-control form-control-sm text-capitalize" id="Mes">
+                                        @for (int i = 0; i < monthNames.Length - 1; i++)
+                                        {
+                                            <option value="@(i + 1)" @(i + 1 == DateTime.Today.Month ? "selected" : "")>@monthNames[i]</option>
+                                        }
+                                    </select>
+                                </th>
+                            </tr>
+                            <tr>
+                                <th class="bg-gray-light">Área</th>
+                                <th class="bg-gray-light">Confirmador</th>
+                                @foreach (var item in tiposVerificacion)
+                                {
+                                    <th class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")" width="60">Ves/Sem</th>
+                                    <th class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")">S1</th>
+                                    <th class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")">S2</th>
+                                    <th class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")">S3</th>
+                                    <th class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")">S4</th>
+                                    <th class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")">S5</th>
+                                    <th class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")">S6</th>
+                                    if (item.VP)
+                                    {
+                                        <th class="bg-primary opacity-8">VP</th>
+                                    }
+                                    if (item.IGP)
+                                    {
+                                        <th class="bg-success opacity-8" width="60">IGP</th>
+                                    }
+                                    <th class="@(item.Id == 1 ? "bg-blue-dark" : "bg-danger")">% Cumpl.</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in empleados.OrderBy(x => x.AreaId))
+                            {
+                                confirmadorComentario = comentarios.FirstOrDefault(x => x.EmpleadoId == item.EmpleadoId);
+                                mismaArea = areaId == item.AreaId;
+                                if (!mismaArea)
+                                {
+                                    cantidadFilas = empleados.Count(x => x.AreaId == item.AreaId);
+                                    areaId = item.AreaId;
+                                }
+
+                                <tr class="text-center">
+                                    @if (!mismaArea)
+                                    {
+                                        <td class="bg-gray-light w-200px" rowspan="@cantidadFilas">@item.Area.Descripcion</td>
+                                    }
+                                    <td class="w-200px">@item.Empleado.Nombre @item.Empleado.ApellidoPaterno</td>
+
+                                    @foreach (var item2 in tiposVerificacion)
+                                    {
+                                        confirmadorSemana = semanas.FirstOrDefault(x => x.EmpleadoId == item.EmpleadoId && x.TipoVerificacionId == item2.Id);
+
+                                        <td class="text-center opacity-8 @(item2.Id == 1 ? "bg-blue-dark" : "bg-danger")">
+                                            <input data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" class="form-control form-control-sm text-center nro-semana" value="@(confirmadorSemana != null ? confirmadorSemana.NroSemana : 0)" disabled="disabled" />
+                                        </td>
+                                        <td data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" data-semana="1">@verificaciones.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == item2.Id && x.SemanaMes == 1)</td>
+                                        <td data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" data-semana="2">@verificaciones.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == item2.Id && x.SemanaMes == 2)</td>
+                                        <td data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" data-semana="3">@verificaciones.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == item2.Id && x.SemanaMes == 3)</td>
+                                        <td data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" data-semana="4">@verificaciones.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == item2.Id && x.SemanaMes == 4)</td>
+                                        <td data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" data-semana="5">@verificaciones.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == item2.Id && x.SemanaMes == 5)</td>
+                                        <td data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" data-semana="6">@verificaciones.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == item2.Id && x.SemanaMes == 6)</td>
+                                        if (item2.VP)
+                                        {
+                                            <th class="opacity-8 bg-primary" data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" data-vp="true">
+                                                @verificaciones.Count(x => x.VP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == item2.Id)
+                                            </th>
+                                        }
+                                        if (item2.IGP)
+                                        {
+                                            <th class="opacity-8 bg-success" data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id" data-igp="true">
+                                                @verificaciones.Count(x => x.IGP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == item2.Id)
+                                            </th>
+                                        }
+                                        <th class="@(item2.Id == 1 ? "bg-blue-dark" : "bg-danger")"><span class="porcentaje" data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="@item2.Id">0</span> %</th>
+                                    }
+                                    <td>
+                                        <input class="form-control form-control-sm comentario" data-empleadoid="@item.EmpleadoId" disabled="disabled" value="@(confirmadorComentario != null ? confirmadorComentario.Comentario : "")" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <hr />
+                @if (sostenibilidades != null && sostenibilidades.Count > 0)
+                {
+                    <div class="table-responsive">
+                        <table id="tblVerificacionesSostenibilidad" class="table table-sm table-bordered">
+                            <thead>
+                                <tr>
+                                    <td rowspan="2" colspan="2"></td>
+                                    <th class="bg-blue-dark" colspan="@(14 + (tiposVerificacion.SingleOrDefault(x => x.Id == 1).VP ? 1 : 0) + (tiposVerificacion.SingleOrDefault(x => x.Id == 1).IGP ? 1 : 0))">CONFIRMACIÓN DE ROL</th>
+                                    <th class="bg-danger" colspan="14">CONFIRMACIÓN DE PROCESOS</th>
+                                </tr>
+                                <tr>
+                                    <th class="bg-blue-dark" width="60">Ves/Mes</th>
+                                    <th class="bg-blue-dark">E</th>
+                                    <th class="bg-blue-dark">F</th>
+                                    <th class="bg-blue-dark">M</th>
+                                    <th class="bg-blue-dark">A</th>
+                                    <th class="bg-blue-dark">M</th>
+                                    <th class="bg-blue-dark">J</th>
+                                    <th class="bg-blue-dark">J</th>
+                                    <th class="bg-blue-dark">A</th>
+                                    <th class="bg-blue-dark">S</th>
+                                    <th class="bg-blue-dark">O</th>
+                                    <th class="bg-blue-dark">N</th>
+                                    <th class="bg-blue-dark">D</th>
+                                    @if (tiposVerificacion.SingleOrDefault(x => x.Id == 1).VP)
+                                    {
+                                        <th class="bg-primary opacity-8">VP</th>
+                                    }
+                                    @if (tiposVerificacion.SingleOrDefault(x => x.Id == 1).IGP)
+                                    {
+                                        <th class="bg-success opacity-8" width="60">IGP</th>
+                                    }
+                                    <th class="bg-blue-dark">% Cumpl.</th>
+                                    <th class="bg-danger" width="60">Ves/Mes</th>
+                                    <th class="bg-danger">E</th>
+                                    <th class="bg-danger">F</th>
+                                    <th class="bg-danger">M</th>
+                                    <th class="bg-danger">A</th>
+                                    <th class="bg-danger">M</th>
+                                    <th class="bg-danger">J</th>
+                                    <th class="bg-danger">J</th>
+                                    <th class="bg-danger">A</th>
+                                    <th class="bg-danger">S</th>
+                                    <th class="bg-danger">O</th>
+                                    <th class="bg-danger">N</th>
+                                    <th class="bg-danger">D</th>
+                                    <th class="bg-danger">% Cumpl.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in sostenibilidades)
+                                {
+
+                                    <tr class="text-center">
+                                        @{ sostenibilidadMes = meses.FirstOrDefault(x => x.EmpleadoId == item.EmpleadoId && x.TipoVerificacionId == 1); }
+                                        @if (primeraSostenibilidad)
+                                        {
+                                            primeraSostenibilidad = false;
+                                            <td rowspan="@sostenibilidades.Count" class="bg-gray-light w-200px">SOSTENIBILIDAD</td>
+                                        }
+                                        <td class="w-200px">@item.Empleado.Nombre @item.Empleado.ApellidoPaterno</td>
+                                        <td class="text-center opacity-8 bg-blue-dark">
+                                            <input data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="1" class="form-control form-control-sm text-center nro-mes" value="@(sostenibilidadMes != null ? sostenibilidadMes.NroAnio : 0)" disabled="disabled" />
+                                        </td>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="1" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 1 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="2" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 2 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="3" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 3 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="4" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 4 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="5" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 5 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="6" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 6 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="7" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 7 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="8" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 8 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="9" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 9 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="10" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 10 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="11" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 11 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="12" data-tipoverificacionid="1">@verificacionesSostenibilidad.Count(x => !x.VP && x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 12 && x.Verificacion.TipoVerificacionId == 1)</th>
+                                        @if (tiposVerificacion.SingleOrDefault(x => x.Id == 1).VP)
+                                        {
+                                            <td data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="1" data-vp="true" class="opacity-8 bg-primary">@verificacionesSostenibilidad.Count(x => x.VP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == 1)</td>
+                                        }
+                                        @if (tiposVerificacion.SingleOrDefault(x => x.Id == 1).IGP)
+                                        {
+                                            <td data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="1" data-igp="true" class="opacity-8 bg-success">@verificacionesSostenibilidad.Count(x => x.IGP && x.EmpleadoId == item.EmpleadoId && x.Verificacion.TipoVerificacionId == 1)</td>
+                                        }
+                                        <td class="bg-blue-dark"><span class="porcentaje" data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="1">0</span> %</td>
+
+
+                                        @{ sostenibilidadMes = meses.FirstOrDefault(x => x.EmpleadoId == item.EmpleadoId && x.TipoVerificacionId == 2); }
+                                        <td class="text-center opacity-8 bg-danger">
+                                            <input data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="2" class="form-control form-control-sm text-center  nro-mes" value="@(sostenibilidadMes != null ? sostenibilidadMes.NroAnio : 0)" disabled="disabled" />
+                                        </td>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="1" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 1 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="2" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 2 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="3" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 3 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="4" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 4 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="5" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 5 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="6" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 6 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="7" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 7 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="8" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 8 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="9" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 9 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="10" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 10 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="11" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 11 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <th data-empleadoid="@item.EmpleadoId" data-mes="12" data-tipoverificacionid="2">@verificacionesSostenibilidad.Count(x => x.EmpleadoId == item.EmpleadoId && x.NumeroMes == 12 && x.Verificacion.TipoVerificacionId != 1)</th>
+                                        <td class="bg-danger"><span class="porcentaje" data-empleadoid="@item.EmpleadoId" data-tipoverificacionid="2">0</span> %</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- SweetAlert2 -->
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+    var gestion = {
+        Listar: function () {
+            var model = {
+                'tableroId': @Model.Id,
+                'anio': $('#Anio').val(),
+                'mes': $('#Mes').val()
+            };
+            $.ajax({
+                url: "/Verificacion/ListarResumen",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    $('#Anio, #Mes').attr('disabled', 'disabled');
+                },
+                complete: function () {
+                    $('#Anio, #Mes').removeAttr('disabled');
+                },
+                success: function (data) {
+                    $(`td[data-empleadoid][data-tipoverificacionid][data-semana]`).text(0);
+                    $(`th[data-empleadoid][data-tipoverificacionid][data-vp]`).text(0);
+                    $(`th[data-empleadoid][data-tipoverificacionid][data-igp]`).text(0);
+
+                    $(`input.nro-semana`).val(0);
+                    $(`input.nro-mes`).val(0);
+                    $(`input.comentario`).val(null);
+
+                    $.each(data.verificaciones, function (i, e) {
+                        $(`td[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.Verificacion.TipoVerificacionId}"][data-semana="1"]`).text(
+                            data.verificaciones.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == e.Verificacion.TipoVerificacionId && x.SemanaMes == 1 && x.VP == false }).length
+                        );
+
+                        $(`td[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.Verificacion.TipoVerificacionId}"][data-semana="2"]`).text(
+                            data.verificaciones.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == e.Verificacion.TipoVerificacionId && x.SemanaMes == 2 && x.VP == false }).length
+                        );
+
+                        $(`td[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.Verificacion.TipoVerificacionId}"][data-semana="3"]`).text(
+                            data.verificaciones.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == e.Verificacion.TipoVerificacionId && x.SemanaMes == 3 && x.VP == false }).length
+                        );
+
+                        $(`td[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.Verificacion.TipoVerificacionId}"][data-semana="4"]`).text(
+                            data.verificaciones.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == e.Verificacion.TipoVerificacionId && x.SemanaMes == 4 && x.VP == false }).length
+                        );
+
+                        $(`td[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.Verificacion.TipoVerificacionId}"][data-semana="5"]`).text(
+                            data.verificaciones.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == e.Verificacion.TipoVerificacionId && x.SemanaMes == 5 && x.VP == false }).length
+                        );
+
+                        $(`td[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.Verificacion.TipoVerificacionId}"][data-semana="6"]`).text(
+                            data.verificaciones.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == e.Verificacion.TipoVerificacionId && x.SemanaMes == 6 && x.VP == false }).length
+                        );
+
+                        $(`th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.Verificacion.TipoVerificacionId}"][data-vp="true"]`).text(
+                            data.verificaciones.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == e.Verificacion.TipoVerificacionId && x.VP == true }).length
+                        );
+
+                        $(`th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.Verificacion.TipoVerificacionId}"][data-igp="true"]`).text(
+                            data.verificaciones.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == e.Verificacion.TipoVerificacionId && x.IGP == true }).length
+                        );
+                    });
+
+                    $.each(data.semanas, function (i, e) {
+                        $(`input.nro-semana[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.TipoVerificacionId}"]`).val(e.NroSemana);
+                    });
+
+                    $.each(data.comentarios, function (i, e) {
+                        $(`input.comentario[data-empleadoid="${e.EmpleadoId}"]`).val(e.Comentario);
+                    });
+
+                    $(`#tblVerificacionesSostenibilidad th[data-empleadoid][data-tipoverificacionid="1"][data-mes]`).text(0);
+                    $(`#tblVerificacionesSostenibilidad th[data-empleadoid][data-tipoverificacionid="1"][data-vp="true"]`).text(0);
+                    $(`#tblVerificacionesSostenibilidad th[data-empleadoid][data-tipoverificacionid="1"][data-igp="true"]`).text(0);
+                    $(`#tblVerificacionesSostenibilidad th[data-empleadoid][data-tipoverificacionid="2"][data-mes]`).text(0);
+
+                    $.each(data.verificacionesSostenibilidad, function (i, e) {
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="1"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 1 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="2"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 2 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="3"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 3 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="4"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 4 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="5"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 5 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="6"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 6 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="7"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 7 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="8"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 8 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="9"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 9 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="10"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 10 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="11"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 11 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-mes="12"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.NumeroMes == 12 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-vp="true"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.VP == true }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="1"][data-igp="true"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId == 1 && x.IGP == true }).length
+                        );
+
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="1"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 1 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="2"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 2 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="3"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 3 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="4"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 4 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="5"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 5 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="6"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 6 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="7"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 7 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="8"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 8 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="9"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 9 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="10"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 10 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="11"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 11 && x.VP == false }).length
+                        );
+
+                        $(`#tblVerificacionesSostenibilidad th[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="2"][data-mes="12"]`).text(
+                            data.verificacionesSostenibilidad.filter(x => { return x.EmpleadoId == e.EmpleadoId && x.Verificacion.TipoVerificacionId != 1 && x.NumeroMes == 12 && x.VP == false }).length
+                        );
+
+                    });
+
+                    $.each(data.meses, function (i, e) {
+                        $(`#tblVerificacionesSostenibilidad input.nro-mes[data-empleadoid="${e.EmpleadoId}"][data-tipoverificacionid="${e.TipoVerificacionId}"]`).val(e.NroAnio);
+                    });
+
+                    gestion.ValidarColores();
+                },
+                error: function (data) {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        ObtenerModelo: function () {
+            var model = {};
+
+            var anio = $('#Anio').val(),
+                mes = $('#Mes').val(),
+                estructuraId = @Model.Id;
+
+            var contador = 0;
+            $.each($('#tblVerificaciones tbody tr'), function (i, tr) {
+                $.each($(tr).find('input.nro-semana'), function (y, input) {
+                    model['semanas[' + contador + '].EstructuraId'] = estructuraId;
+                    model['semanas[' + contador + '].EmpleadoId'] = input.dataset.empleadoid;
+                    model['semanas[' + contador + '].TipoVerificacionId'] = input.dataset.tipoverificacionid;
+                    model['semanas[' + contador + '].Anio'] = anio;
+                    model['semanas[' + contador + '].Mes'] = mes;
+                    model['semanas[' + contador + '].NroSemana'] = input.value;
+                    contador++;
+                });
+
+                var comentario = $(tr).find('input.comentario');
+
+                model['comentarios[' + i + '].EstructuraId'] = estructuraId;
+                model['comentarios[' + i + '].EmpleadoId'] = comentario[0].dataset.empleadoid;
+                model['comentarios[' + i + '].Anio'] = anio;
+                model['comentarios[' + i + '].Mes'] = mes;
+                model['comentarios[' + i + '].Comentario'] = comentario[0].value;
+
+            });
+
+            contador = 0;
+            $.each($(`#tblVerificacionesSostenibilidad tbody tr`), function (i, tr) {
+
+                $.each($(tr).find('input.nro-mes'), function (y, input) {
+                    model['meses[' + contador + '].EstructuraId'] = estructuraId;
+                    model['meses[' + contador + '].EmpleadoId'] = input.dataset.empleadoid;
+                    model['meses[' + contador + '].TipoVerificacionId'] = input.dataset.tipoverificacionid;
+                    model['meses[' + contador + '].Anio'] = anio;
+                    model['meses[' + contador + '].NroAnio'] = input.value;
+                    contador++;
+                });
+            });
+
+            return model;
+        },
+        ValidarColores: function () {
+            $.each($('#tblVerificaciones tbody tr'), function (i, tr) {
+                var nro_semanas = $(tr).find(`input.nro-semana[data-tipoverificacionid]`);
+                $.each(nro_semanas, function (x, input) {
+                    var semanas = $(`#tblVerificaciones td[data-empleadoid='${input.dataset.empleadoid}'][data-tipoverificacionid='${input.dataset.tipoverificacionid}']`);
+                    var totalSemana = 0;
+                    $.each(semanas, function (z, sem) {
+                        totalSemana += (input.value * 1) > (sem.innerText * 1) ? (sem.innerText * 1) : (input.value * 1);
+                        if ((sem.innerText * 1) >= (input.value * 1)) {
+                            sem.classList.remove('text-danger')
+                            sem.classList.add('text-success')
+                        }
+                        else {
+                            sem.classList.remove('text-success')
+                            sem.classList.add('text-danger')
+                        }
+                    });
+
+                    var cantidadPorSemana = (input.value * 5) == 0 ? 1 : (input.value * 5);
+                    $(`#tblVerificaciones span.total[data-empleadoid='${input.dataset.empleadoid}'][data-tipoverificacionid='${input.dataset.tipoverificacionid}']`).text(totalSemana);
+                    $(`#tblVerificaciones span.total_[data-empleadoid='${input.dataset.empleadoid}'][data-tipoverificacionid='${input.dataset.tipoverificacionid}']`).text(cantidadPorSemana);
+                    $(`#tblVerificaciones span.porcentaje[data-empleadoid='${input.dataset.empleadoid}'][data-tipoverificacionid='${input.dataset.tipoverificacionid}']`).text(helper.format.decimal((totalSemana / cantidadPorSemana) * 100));
+                });
+            });
+
+            $.each($('#tblVerificacionesSostenibilidad tbody tr'), function (i, tr) {
+                var nro_semanas = $(tr).find(`input.nro-mes[data-tipoverificacionid]`);
+                $.each(nro_semanas, function (x, input) {
+                    var semanas = $(`#tblVerificacionesSostenibilidad th[data-empleadoid='${input.dataset.empleadoid}'][data-tipoverificacionid='${input.dataset.tipoverificacionid}']`);
+                    var totalSemana = 0;
+
+                    $.each(semanas, function (z, sem) {
+                        totalSemana += (input.value * 1) > (sem.innerText * 1) ? (sem.innerText * 1) : (input.value * 1);
+                        if ((sem.innerText * 1) >= (input.value * 1)) {
+                            sem.classList.remove('text-danger')
+                            sem.classList.add('text-success')
+                        }
+                        else {
+                            sem.classList.remove('text-success')
+                            sem.classList.add('text-danger')
+                        }
+                    });
+
+                    var cantidadPorSemana = (input.value * 12) == 0 ? 1 : (input.value * 12);
+                    $(`#tblVerificacionesSostenibilidad span.total[data-empleadoid='${input.dataset.empleadoid}'][data-tipoverificacionid='${input.dataset.tipoverificacionid}']`).text(totalSemana);
+                    $(`#tblVerificacionesSostenibilidad span.total_[data-empleadoid='${input.dataset.empleadoid}'][data-tipoverificacionid='${input.dataset.tipoverificacionid}']`).text(cantidadPorSemana);
+                    $(`#tblVerificacionesSostenibilidad span.porcentaje[data-empleadoid='${input.dataset.empleadoid}'][data-tipoverificacionid='${input.dataset.tipoverificacionid}']`).text(helper.format.decimal((totalSemana / cantidadPorSemana) * 100));
+                });
+            });
+        }
+    };
+
+    $(function () {
+
+        gestion.ValidarColores();
+
+        $('#btnEditar').click(function () {
+            $('#tblVerificacionesSostenibilidad input, #tblVerificaciones input').removeAttr('disabled');
+            $('#btnEditar').attr('hidden', 'hidden');
+            $('#btnGuardar').removeAttr('hidden');
+        });
+        $('#btnGuardar').click(function () {
+            $('#btnEditar').removeAttr('hidden');
+            $('#btnGuardar').attr('hidden', 'hidden');
+        });
+        $('#Anio, #Mes').change(function () {
+            $('#btnEditar').removeAttr('hidden');
+            $('#btnGuardar').attr('hidden', 'hidden');
+            $('#tblVerificacionesSostenibilidad input, #tblVerificaciones input').attr('disabled', 'disabled');
+
+            gestion.Listar();
+        });
+
+        $('#btnGuardar').click(function () {
+            var model = gestion.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Verificacion/GuardarTablero",
+                data: model,
+                beforeSend: function () {
+                    $("#Error").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                    helper.wait.append('#Error');
+                },
+                complete: function () {
+                    $('#btnGuardar').removeAttr("disabled");
+                    helper.wait.remove('#Error');
+                },
+                success: function (result) {
+                    $('input').attr('disabled', 'disabled');
+                    Swal.fire({
+                        title: 'Se actualizo la información',
+                    }).then(() => {
+                        gestion.Listar();
+                    });
+                },
+                error: function () {
+                    helper.wait.remove('#Error');
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                        $("#Error").slideDown();
+                        $('#btnGuardar').removeAttr("disabled");
+                    })
+                }
+            });
+        });
+    });
+</script>

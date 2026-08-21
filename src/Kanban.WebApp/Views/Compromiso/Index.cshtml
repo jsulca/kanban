@@ -1,0 +1,208 @@
+﻿@{
+    ViewBag.Title = "Mis compromisos";
+    var controles = (List<Control>)ViewBag.Controles;
+}
+<link href="~/plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="fas fa-user-tag"></i>&nbsp;Compromisos de Célula
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;">
+                </h3>
+            </div>
+            <div class="card-body bg-light">
+                <div class="form-row" id="Filtros">
+                    <div class="col-md-2 col-sm-6">
+                        <label>Código:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese el Código" id="FCodigo" />
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label>Estado:</label>
+                        @Html.DropDownList("FEstado", Html.GetEnumSelectList<EstadoCompromiso>(), "TODOS", new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <label>Descripción:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese la breve descripción" id="FDescripcion" />
+                    </div>
+                    <div class="col-md-2 col-sm-6">
+                        <label>Célula:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese la célula" id="FCelula" />
+                    </div>
+                    <div class="col">
+                        <label>Fecha desde:</label>
+                        <input class="form-control form-control-sm datepicker" placeholder="Ingrese la fecha desde" id="FFechaDesde" />
+                    </div>
+                    <div class="col">
+                        <label>Fecha hasta:</label>
+                        <input class="form-control form-control-sm datepicker" placeholder="Ingrese la fecha desde" id="FFechaHasta" />
+                    </div>
+                </div>
+            </div>
+            <div id="Error"></div>
+            <div class="card-footer text-right bg-white">
+                <div id="mensajes"></div>
+                @if (controles.Any(x => x.Nombre.Equals("btnNuevo")))
+                {
+                    <button type="button" class="btn btn-success" id="btnNuevo"><i class="fa fa-plus"></i>&nbsp; Nuevo</button>
+                }
+                <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div id="list" data-pagesize="8" data-pageindex="1" data-function="index.Listar" data-totalrows="0" data-paginator="#paginator" class="row"></div>
+        <div id="paginator" class="d-flex justify-content-center"></div>
+    </div>
+</div>
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+<!-- SweetAlert2 -->
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script src="~/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+<script src="~/plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js"></script>
+<script>
+    var index = {
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                }
+            });
+        },
+        Listar: function (page) {
+            var table = $("#list");
+            var model = {
+                'pageIndex': page,
+                'pageSize': table.data('pagesize'),
+                'filter.Codigo': $("#FCodigo").val(),
+                'filter.Descripcion': $("#FDescripcion").val(),
+                'filter.Estado': $("#FEstado").val(),
+                'filter.EstructuraDescripcion': $("#FCelula").val(),
+                'filter.FechaRegistroDesde': $("#FFechaDesde").val(),
+                'filter.FechaRegistroHasta': $("#FFechaHasta").val()
+            };
+            $.ajax({
+                url: "/Compromiso/ListarPorPagina",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    $('.refresh-container').attr('style', 'display: block');
+                },
+                complete: function () {
+                    $('.refresh-container').removeAttr('style');
+                },
+                success: function (data) {
+                    table.data('pageindex', page);
+                    table.data('totalrows', data.totalRows);
+                    index.GenerarTabla(table, data.lista);
+                    if (data.totalRows == 0) table.append(`<div class="col-md-12"><div class="alert alert-warning alert-dismissible"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button> No existen registros.</div></div>`);
+                },
+                error: function () {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            table.children('div').remove();
+            var rows = '';
+            for (var i = 0; i < lista.length; i += 4) {
+                if (lista[i]) rows += index.ObtenerItem(lista[i]);
+                if (lista[i + 1]) rows += index.ObtenerItem(lista[i + 1]);
+                if (lista[i + 2]) rows += index.ObtenerItem(lista[i + 2]);
+                if (lista[i + 3]) rows += index.ObtenerItem(lista[i + 3]);
+            }
+            helper.pagination.update(table);
+            table.append(rows);
+        },
+        ObtenerItem: function (item) {
+            return `<div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card text-center">
+                            ${item.Nuevo ? `<div class="ribbon-wrapper"><div class="ribbon bg-info">Nuevo</div></div>` : ''}
+                            <div class="card-header bg-${item.ColorFondo.Clase || 'light'}">
+                                ${item.AreaId ? item.Area.Descripcion : '&nbsp;'}
+                            </div>
+                            <div class="card-body">
+                                <h4 class="card-title float-none">
+                                @if (controles.Any(x => x.Nombre.Equals("linkInformacion")))
+                                {
+                                    @: <a href="javascript:void(0)" class="option ver" data-id="${item.Id}">${item.Codigo}</a>
+                                }
+                                else
+                                {
+                                    @: ${item.Codigo}
+                                }
+                                </h4>
+                                <p class="font-weight-bold">${item.InstanciaId ? item.Instancia.Abreviatura : item.Estado.replaceAll('_', ' ')}</p>
+                                <p class="card-text text-truncate">${item.Descripcion} <br/><i>${item.Estructura.Descripcion}</i></p>
+                                @if (controles.Any(x => x.Nombre.Equals("btnSeguimiento")))
+                                {
+                                    @: <button type="button" class="btn btn-info seguimiento" data-id="${item.Id}"><i class="fa fa-calendar-alt"></i>&nbsp; Seguimiento</button>
+                                }
+                            </div>
+                            <div class="card-footer text-muted text-center">${item.Fecha}</div>
+                        </div>
+                    </div>`;
+        }
+    };
+
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'bottom',
+        showConfirmButton: false,
+        timer: 2500
+    });
+
+    $(function () {
+        $('.datepicker').datepicker({
+            format: 'dd/mm/yyyy',
+            language: 'es',
+            autoclose: true
+        });
+        $('#Filtros input').keypress(function (e) {
+            var key = e.keyCode || event.keyCode;
+            if (key == 13) index.Listar(1);
+        });
+        $('#Filtros select').change(function (e) { index.Listar(1); });
+        $('#btnNuevo').click(function () {
+            index.AbrirModal('/Compromiso/Nuevo', {});
+        });
+        $('#list').delegate('button.seguimiento', 'click', function () {
+            var id = this.dataset.id;
+            index.AbrirModal('/Compromiso/Seguimiento', { id });
+        });
+
+        $('#list').delegate('a.ver', 'click', function () {
+            var id = this.dataset.id;
+            index.AbrirModal('/Compromiso/Ver', { id });
+        });
+
+        index.Listar(1);
+    });
+
+    var SetCompromiso = function () {
+        $('#modal-ventana').modal('hide');
+        index.Listar(1);
+        Toast.fire({
+            type: 'success',
+            title: 'Se registro el compromiso.'
+        });
+    }
+
+</script>

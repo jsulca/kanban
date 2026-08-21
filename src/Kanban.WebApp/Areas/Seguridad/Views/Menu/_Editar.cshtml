@@ -1,0 +1,98 @@
+﻿@model Menu
+
+<div class="modal-dialog animated bounceInDown">
+    <div class="modal-content">
+        @using (Html.BeginForm("Nuevo", "Menu", null, FormMethod.Post, null, new { @id = "form-modal-editar" }))
+        {
+            @Html.HiddenFor(m => m.Id)
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Menu</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label>Nombre: <span class="text-danger">(*)</span></label>
+                            @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control form-control-sm" })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-8">
+                        <div class="form-group">
+                            <label>Url: </label>
+                            @Html.TextBoxFor(m => m.Url, new { @class = "form-control form-control-sm" })
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-group">
+                            <label>Orden: </label>
+                            @Html.TextBoxFor(m => m.Orden, new { @class = "form-control form-control-sm" })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Icono: </label>
+                            @Html.TextBoxFor(m => m.Icono, new { @class = "form-control form-control-sm" })
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Tipo: </label>
+                            @if (Model.PadreId == 0)
+                            {
+                                @Html.HiddenFor(m => m.Tipo)
+                                <input class="form-control form-control-sm" value="@Model.Tipo.ToString()" readonly />
+                            }
+                            else
+                            {
+                                @Html.DropDownListFor(m => m.Tipo, Html.GetEnumSelectList<TipoMenu>(), new { @class = "form-control form-control-sm" })
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="msgEditar"></div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-save"></i>&nbsp; Guardar</button>
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp;Cancelar</button>
+            </div>
+
+        }
+    </div>
+</div>
+<script>
+    $(function () {
+        $("#form-modal-editar").submit(function (e) {
+            var model = $(this).serialize();
+            $.ajax({
+                type: "POST",
+                url: "/Seguridad/Menu/Editar",
+                data: model,
+                beforeSend: function () {
+                    $("#msgEditar").hide();
+                    $('#form-modal-editar button').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    SetEditarMenu();
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    helper.errorShow('#msgEditar', result.responseText);
+                    $("#msgEditar").slideDown();
+                    $('#form-modal-editar button').removeAttr("disabled");
+                }
+            });
+            e.preventDefault();
+        });
+    });
+</script>

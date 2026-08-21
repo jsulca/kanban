@@ -1,0 +1,89 @@
+﻿@{
+    ViewBag.Title = "Seguridad - Lista de menus";
+}
+<link href="~/plugins/jstree/css/style.min.css" rel="stylesheet" />
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-danger-border">
+            <div class="card-header">
+                <h6 class="card-title"><i class="fa fa-sitemap"></i>&nbsp; MENUS</h6>
+                <img src="/images/logo-ola-sm.png" class="float-right" style="height: 25px;">
+                <img src="/images/logo-suma-sm.png" class="float-right" style="height: 25px; width: 90px;">
+            </div>
+            <div class="card-body">
+                <div class="text-right">
+                    <button type="button" class="btn btn-sm btn-primary" title="Nuevo" id="btnNuevo"><i class="fa fa-plus"></i>&nbsp;Nuevo</button>
+                    <button type="button" class="btn btn-sm btn-warning" title="Editar" id="btnEditar"><i class="fa fa-pencil-alt"></i>&nbsp;Editar</button>
+                </div>
+                <br />
+                <div id="Error"></div>
+                <div id="Tree"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+<script src="~/plugins/jstree/js/jstree.min.js"></script>
+<script>
+    var treeData = @(Html.Raw(ViewBag.MenuJson ?? "[]"));
+    var index = {
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal({ backdrop: "static" });
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                    helper.errorShow('#Error', result.responseText);
+                }
+            });
+        }
+    };
+    $(function () {
+        $('#btnNuevo').click(function () {
+            var node = $("#Tree").jstree().get_node($("#Tree").jstree("get_selected"));
+            if (node) index.AbrirModal('/Seguridad/Menu/Nuevo', {id : node.id});
+        });
+        $("#btnEditar").click(function () {
+            var node = $("#Tree").jstree().get_node($("#Tree").jstree("get_selected"));
+            if (node && node.id > 0) index.AbrirModal('/Seguridad/Menu/Editar', { id: node.id });
+
+        });
+        $('#Tree').jstree({
+            plugins: ["wholerow"],
+            search: { show_only_matches: true },
+            core: {
+                multiple: false,
+                check_callback: true,
+                data: treeData,
+                animation: '1',
+                themes: {
+                    name: 'proton',
+                    responsive: true
+                }
+            }
+        }).bind("dblclick.jstree", function (event, e) {
+            var node = $("#Tree").jstree().get_node($(event.target).closest("li"));
+            if (node.children.length > 0) {
+                if (node.state.opened) $("#Tree").jstree("close_node", node);
+                else $("#Tree").jstree("open_node", node);
+            }
+        });
+    });
+
+    SetEditarMenu = SetNuevoMenu = function () {
+        $('#modal-ventana').modal('hide');
+        location.reload();
+    }
+</script>

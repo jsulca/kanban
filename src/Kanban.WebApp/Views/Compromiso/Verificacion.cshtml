@@ -1,0 +1,246 @@
+﻿@{
+    ViewBag.Title = "Administración de Compromisos";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="fas fa-check-double"></i>&nbsp;Verificación de Compromisos
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-body bg-light">
+                <div class="form-row" id="Filtros">
+                    <div class="col-3">
+                        <label>Célula:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese la célula" id="FCelula" />
+                    </div>
+                    <div class="col-3">
+                        <label>Código:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese el Código" id="FCodigo" />
+                    </div>
+                    <div class="col-6">
+                        <label>Descripción:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese la breve descripción" id="FDescripcion" />
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-right bg-white">
+                <div id="mensajes"></div>
+                <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card card-success-border">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="tblCompromiso"
+                           class="table table-sm table-bordered table-hover"
+                           data-function="index.Listar"
+                           data-pageindex="1"
+                           data-totalrows="0"
+                           data-pagesize="20"
+                           data-paginator="#paginator">
+                        <thead>
+                            <tr class="bg-primary">
+                                <th width="50"></th>
+                                <th width="20">#</th>
+                                @*<th width="300">Tablero</th>*@
+                                <th width="120">Célula</th>
+                                <th width="120">Código</th>
+                                <th>Descripción</th>
+                                <th width="120">Fecha Registro</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-end" id="paginator"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+<!-- SweetAlert2 -->
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'bottom',
+        showConfirmButton: false,
+        timer: 2500
+    });
+
+    var index = {
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                }
+            });
+        },
+        Listar: function (page) {
+            var table = $("#tblCompromiso");
+            var model = {
+                'pageIndex': page,
+                'pageSize': table.data('pagesize'),
+                'filter.Codigo': $("#FCodigo").val(),
+                'filter.Descripcion': $("#FDescripcion").val(),
+                'filter.Estado': @((int)EstadoCompromiso.NUEVO)
+            };
+            $.ajax({
+                url: "/Compromiso/ListarPorPagina",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    $('.refresh-container').attr('style', 'display: block');
+                },
+                complete: function () {
+                    $('.refresh-container').removeAttr('style');
+                },
+                success: function (data) {
+                    table.data('pageindex', page);
+                    table.data('totalrows', data.totalRows);
+                    index.GenerarTabla(table, data.lista);
+                    if (data.totalRows == 0) table.append(`<tr><td class="text-center" colspan="7">No se encontraron registros.</td></tr>`);
+                },
+                error: function (data) {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            var rows = '';
+            var numero = (table.data('pagesize') * table.data('pageindex')) - table.data('pagesize');
+            $.each(lista, function (i, r) {
+                rows += `<tr>
+                            <td class="text-center">
+                                <a class="option verificar text-info" data-id="${r.Id}" title="Programar"><i class="fa fa-check-double"></i></a>&nbsp;
+                                <a class="option ver text-warning" data-id="${r.Id}" title="Ver"><i class="fa fa-info-circle"></i></a>
+                            </td>
+                            <td class="text-right">${++numero}</td>
+                            @*<td class="text-center">${r.Tablero.Descripcion}</td>*@
+                            <td class="text-center">${r.Estructura.Descripcion}</td>
+                            <td class="text-center">${r.Codigo}</td>
+                            <td>${r.Descripcion}</td>
+                            <td class="text-center">${r.Fecha}</td>
+                        </tr>`;
+
+            });
+            helper.pagination.update(table);
+            tbody.append(rows);
+        },
+        Programar: function (id, respuesta, fecha) {
+            var model = {
+                'model.Id': id,
+                'model.Respuesta': respuesta,
+                'model.Fecha': fecha
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Compromiso/Verificacion",
+                data: model,
+                cache: false,
+                beforeSend: function () { helper.wait.append('mensajes'); },
+                complete: function () { helper.wait.remove('mensajes');},
+                success: function (data) {
+                    Toast.fire({
+                        type: 'success',
+                        title: 'Se programó el compromiso.'
+                    });
+
+                    index.Listar($('#tblCompromiso').data('pageindex'));
+                },
+                error: function () {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#mensajes', data);
+                    })
+                }
+            });
+        }
+    };
+
+
+    $(function () {
+        $('#Filtros input').keypress(function (e) {
+            var key = e.keyCode || event.keyCode;
+            if (key == 13) index.Listar(1);
+        });
+
+        $('#Filtros select').change(function (e) { index.Listar(1); });
+
+        $('#tblCompromiso').delegate('a.verificar', 'click', function () {
+            var id = this.dataset.id;
+            Swal.fire({
+                title: 'Programar compromiso',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fa fa-calendar"></i>&nbsp;Programar',
+                cancelButtonText: 'Cancelar',
+                onOpen: function () {
+                    $('.datepicker').datepicker({});
+                },
+                html:
+                    '<input id="fechaprogramacion" class="swal2-input datepicker" placeholder="Fecha de programación: DD/MM/YYYY" value="@DateTime.Today.ToString("dd/MM/yyyy")">' +
+                    '<textarea id="respuesta" class="swal2-textarea" placeholder="Acción a realizar."></textarea>',
+                focusConfirm: false,
+                preConfirm: () => {
+                    return {
+                        fecha: document.getElementById('fechaprogramacion').value,
+                        respuesta: document.getElementById('respuesta').value
+                    }
+                }
+            }).then(x => {
+                if (x.value) {
+                    var { respuesta, fecha } = x.value;
+                    if (fecha && respuesta) {
+                        index.Programar(id, respuesta, fecha);
+                    } else Toast.fire({ type: 'warning', title: 'Es necesario ingresar una fecha y una acción a realizar.' });
+                }
+            });
+
+
+            //Swal.fire({
+            //    input: 'textarea',
+            //    inputPlaceholder: 'Ingrese la respuesta',
+            //    showCancelButton: true,
+            //    confirmButtonText: '<i class="fa fa-check-double"></i>&nbsp;Finalizar',
+            //    cancelButtonText: 'Cancelar',
+            //}).then(x => {
+            //    if (x.value && x.value.length > 0) {
+            //        var respuesta = x.value;
+            //        index.Finalizar(id, respuesta);
+            //    }
+            //});
+        });
+
+        $('#tblCompromiso').delegate('a.ver', 'click', function () {
+            var id = this.dataset.id;
+            index.AbrirModal('/Compromiso/Ver', { id });
+        });
+
+        index.Listar(1);
+    });
+
+</script>
+

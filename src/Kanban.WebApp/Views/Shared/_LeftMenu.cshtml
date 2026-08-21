@@ -1,0 +1,64 @@
+﻿@model UserInformation
+@{
+    List<Menu> menus = Model.Menus ?? new List<Menu>();
+    menus = menus.Where(x => x.Id != (int)MenuEstatico.GESTION_COMPROMISO && x.Id != (int)MenuEstatico.GESTION_CONFIRMACION).ToList();
+    string url = Context.Request.Path.ToString();
+}
+<div class="sidebar">
+    <div class="user-panel d-flex align-items-center text-light">
+        @*<div class="image">
+            <img src="~/images/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+        </div>*@
+        <div class="info">
+            <span class="d-block"><i class="fa fa-user-alt"></i>&nbsp; @Model.Employee</span>
+            <span class="d-block" title="@Model.StructureRoute"><i class="fas fa-map-marked-alt"></i>&nbsp; @Model.Structure</span>
+            <span class="d-block"><i class="fa fa-building"></i>&nbsp; @Model.Area</span>
+        </div>
+    </div>
+    <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column nav-child-indent nav-legacy" data-widget="treeview" role="menu" data-accordion="false">
+            @foreach (var item in menus.Where(x => (x.PadreId ?? 0) == 0).OrderBy(x => x.Orden))
+            {
+                var hijos = menus.Where(x => x.PadreId == item.Id).OrderBy(x => x.Orden).ToList();
+
+                // Los grupos se pintan desplegados: son pocos y colapsados dejaban la
+                // barra casi vacía. El usuario puede plegarlos al pulsar en la cabecera.
+                var grupo = hijos.Count > 0;
+
+                // La cabecera se marca como activa cuando la página actual es una de
+                // sus opciones; antes se comparaba con la Url de la propia cabecera,
+                // que no tiene, así que nunca se marcaba nada.
+                var activo = hijos.Any(x => url.Contains(x.Url ?? "*")) || url.Contains(item.Url ?? "*");
+
+                <li class="nav-item @(grupo ? "has-treeview menu-open" : "")">
+                    <a href="#" class="nav-link @(activo ? "active" : "")">
+                        <i class="nav-icon @(item.Icono ?? "far fa-circle")"></i>
+                        <p>
+                            @item.Nombre
+                            @if (grupo)
+                            {
+                                <i class="right fas fa-angle-left"></i>
+                            }
+                        </p>
+                    </a>
+                    @if (grupo)
+                    {
+                        <ul class="nav nav-treeview">
+                            @foreach (var subItem in hijos)
+                            {
+                                <li class="nav-item">
+                                    <a href="@subItem.Url" class="nav-link @(url.Contains(subItem.Url ?? "*") ? "active" : "")">
+                                        <i class="nav-icon @(subItem.Icono ?? "far fa-circle")"></i>
+                                        <p>@subItem.Nombre</p>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </li>
+            }
+        </ul>
+    </nav>
+    <!-- /.sidebar-menu -->
+</div>
+

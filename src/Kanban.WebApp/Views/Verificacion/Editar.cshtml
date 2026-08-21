@@ -1,0 +1,402 @@
+﻿@model Verificacion
+@{
+    ViewBag.Title = "Editar Confirmación";
+    List<Respuesta> respuestas = Model.Categorias[0].Preguntas[0].Respuestas;
+    List<TipoVerificacion> tiposVerificacion = ViewBag.TiposVerificacion;
+
+    TipoVerificacion tipoVerificacion = tiposVerificacion.SingleOrDefault(x => x.Id == Model.TipoVerificacionId);
+    if (tipoVerificacion == null)
+    {
+        tipoVerificacion = tiposVerificacion[0];
+    }
+}
+
+<style>
+    tr.pregunta > :first-child {
+        max-width: 30px;
+    }
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="far fa-user-check"></i>&nbsp;Editar Confirmación
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="col-4">
+                        <div class="form-group">
+                            <label>Tipo de Verificación: <span class="text-danger">(*)</span></label>
+                            <select class="form-control form-control-sm" id="TipoVerificacionId">
+                                @foreach (var item in tiposVerificacion)
+                                {
+                                    <option value="@item.Id" data-vp="@item.VP" data-igp="@item.IGP" @(Model.TipoVerificacionId == item.Id ? "selected" : "")>@item.Nombre</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-8">
+                        <div class="form-group">
+                            <label>Nombre: <span class="text-danger">(*)</span></label>
+                            @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control form-control-sm" })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label>Instrucciones:</label>
+                            @Html.TextAreaFor(m => m.Instruccion, new { @class = "form-control form-control-sm", @rows = 4 })
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.Activo, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="Activo">
+                                ¿Se encuentra Activo?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.Fortaleza, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="Fortaleza">
+                                ¿Con Fortalezas?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.Oportunidad, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="Oportunidad">
+                                ¿Con Oportunidades?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.PlanAccion, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="PlanAccion">
+                                ¿Con Planes de Acción?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.Rom, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="Rom">
+                                ¿Con ROM?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.InstructivoEstandar, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="InstructivoEstandar">
+                                ¿Con Instructivo Estándar?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.ResumenCategoria, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="ResumenCategoria">
+                                ¿Con Resumen por Categoria?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12 vp @(tipoVerificacion != null && tipoVerificacion.VP ? "" : "d-none")">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.VP, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="VP">
+                                ¿Es una confirmación VP?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-12 igp @(tipoVerificacion != null && tipoVerificacion.IGP ? "" : "d-none")">
+                        <div class="form-check">
+                            @Html.CheckBoxFor(m => m.IGP, new { @class = "form-check-input" })
+                            <label class="form-check-label" for="IGP">
+                                ¿Es una confirmación IGP?
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <div class="text-center">
+                    <button type="button" class="btn btn-success" id="btnGuardar"><i class="fa fa-save"></i>&nbsp; Guardar</button>
+                    <a role="button" class="btn btn-warning" href="/Verificacion/Modelar"><i class="fa fa-chevron-left"></i>&nbsp; Retroceder</a>
+                </div>
+                <div id="msgEditar" class="mt-1"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-list"></i>&nbsp;Cuerpo del Formulario</h3>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <button type="button" class="btn btn-info" id="btnAgregarCategoria"><i class="fa fa-ellipsis-v"></i>&nbsp; Agregar Categoria</button>
+                    <button type="button" class="btn btn-primary" id="btnAgregarPuntaje"><i class="fa fa-ellipsis-h"></i>&nbsp; Agregar Puntaje</button>
+                </div>
+                <hr />
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm table-valign-middle" id="tblFormulario">
+                        <thead>
+                            <tr class="puntajes">
+                                <th colspan="2">Escala de evaluación</th>
+                                @foreach (var item in respuestas)
+                                {
+
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control form-control-sm font-weight-bold text-center puntaje" value="@item.Valor" />
+                                            <div class="input-group-append">
+                                                <button class="btn btn-danger btn-sm btn-borrar-puntaje"><i class="fa fa-trash"></i></button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                }
+                            </tr>
+                            <tr class="bg-primary">
+                                <th width="35%" colspan="2">Preguntas</th>
+                                <th colspan="@respuestas.Count" class="respuesta">Respuestas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Categorias.OrderBy(x => x.Orden))
+                            {
+                                <tr class="categoria bg-info" data-categoriaid="@item.Id" data-id="@item.Id">
+                                    <th colspan="@(respuestas.Count + 2)">
+                                        <div class="input-group">
+                                            <input class="form-control form-control-sm text-center descripcion" value="@item.Descripcion" />
+                                            <div class="input-group-append">
+                                                <button class="btn btn-sm btn-warning btn-agregar-pregunta" type="button"><i class="fa fa-plus"></i>&nbsp; Agregar Pregunta</button>
+                                                <button class="btn btn-sm btn-danger btn-borrar-categoria" type="button"><i class="fa fa-trash-alt"></i></button>
+                                            </div>
+                                        </div>
+                                    </th>
+                                </tr>
+                                foreach (var item2 in item.Preguntas)
+                                {
+                                    <tr class="pregunta" data-preguntaid="@item2.Id" data-id="@item.Id">
+                                        <td width="20" class="text-center"><button class="btn btn-danger btn-sm btn-borrar-pregunta"><i class="fa fa-trash"></i></button></td>
+                                        <td>
+                                            <input class="form-control form-control-sm font-weight-bold titulo" placeholder="Titulo" value="@item2.Titulo" />
+                                            <textarea class="form-control form-control-sm descripcion" placeholder="Contenido" rows="3">@item2.Descripcion</textarea>
+                                        </td>
+                                        @foreach (var item3 in item2.Respuestas)
+                                        {
+                                            <td><textarea class="form-control form-control-sm respuesta" rows="4">@item3.Descripcion</textarea></td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- SweetAlert2 -->
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script type="text/javascript">
+    var cantidadPuntaje = @(respuestas != null ? respuestas.Count : 2);
+    var nuevo = {
+        GenerarUID: function () {
+            var dt = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = (dt + Math.random() * 16) % 16 | 0;
+                dt = Math.floor(dt / 16);
+                return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            return uuid
+        },
+        ObtenerModelo: function () {
+            var model = {
+                'id': @Model.Id,
+                'nombre': $('#Nombre').val(),
+                'instruccion': $('#Instruccion').val(),
+                'rom': $('#Rom').prop('checked'),
+                'activo': $('#Activo').prop('checked'),
+                'fortaleza': $('#Fortaleza').prop('checked'),
+                'oportunidad': $('#Oportunidad').prop('checked'),
+                'planaccion': $('#PlanAccion').prop('checked'),
+                'instructivoEstandar': $('#InstructivoEstandar').prop('checked'),
+                'resumenCategoria': $('#ResumenCategoria').prop('checked'),
+                'VP': $('#VP').prop('checked'),
+                'IGP': $('#IGP').prop('checked'),
+                'tipoVerificacionId': $('#TipoVerificacionId').val(),
+            };
+
+            var trCategorias = $('table tbody tr.categoria');
+            var inputPuntajes = $('table thead input.puntaje');
+            var inputRespuestas;
+            var id;
+            var ordenCategoria = 0, ordenPregunta = 0;
+            $.each(trCategorias, function (i, tr) {
+                model['Categorias[' + i + '].Id'] = $(tr).data('categoriaid');
+                model['Categorias[' + i + '].Descripcion'] = $(tr).find('input.descripcion').val();
+                model['Categorias[' + i + '].Orden'] = $(tr).data('eliminado') ? 0 : ++ordenCategoria;
+                model['Categorias[' + i + '].Eliminado'] = $(tr).data('eliminado');
+
+                id = tr.dataset.id;
+                trPreguntas = $('table tbody tr.pregunta[data-id="' + id + '"]');
+
+                ordenPregunta = 0;
+                $.each(trPreguntas, function (y, tr2) {
+                    model['Categorias[' + i + '].Preguntas[' + y + '].Id'] = $(tr2).data('preguntaid');
+                    model['Categorias[' + i + '].Preguntas[' + y + '].Orden'] = $(tr2).data('eliminado') ? 0 : ++ordenPregunta;
+                    model['Categorias[' + i + '].Preguntas[' + y + '].Titulo'] = $(tr2).find('input.titulo').val();
+                    model['Categorias[' + i + '].Preguntas[' + y + '].Descripcion'] = $(tr2).find('textarea.descripcion').val();
+                    model['Categorias[' + i + '].Preguntas[' + y + '].Eliminado'] = $(tr2).data('eliminado');
+
+                    inputRespuestas = $(tr2).find('textarea.respuesta');
+
+                    $.each(inputRespuestas, function (x, rpta) {
+                        model['Categorias[' + i + '].Preguntas[' + y + '].Respuestas[' + x + '].Valor'] = $(inputPuntajes[x]).val();
+                        model['Categorias[' + i + '].Preguntas[' + y + '].Respuestas[' + x + '].Descripcion'] = $(rpta).val();
+                    });
+                });
+            });
+
+            return model;
+        }
+    };
+    $(function () {
+        $('#btnAgregarCategoria').click(function () {
+            var id = nuevo.GenerarUID();
+            var categoria = `<tr class="categoria bg-info" data-id="${id}">
+                                <th colspan="${cantidadPuntaje + 2}">
+                                    <div class="input-group">
+                                        <input class="form-control form-control-sm text-center descripcion" />
+                                        <div class="input-group-append">
+                                            <button class="btn btn-sm btn-warning btn-agregar-pregunta" type="button"><i class="fa fa-plus"></i>&nbsp; Agregar Pregunta</button>
+                                            <button class="btn btn-sm btn-danger btn-borrar-categoria" type="button"><i class="fa fa-trash-alt"></i></button>
+                                        </div>
+                                    </div>
+                                </th>
+                            </tr>`;
+            $('#tblFormulario tbody').append(categoria);
+        });
+        $('table').delegate('button.btn-borrar-categoria', 'click', function () {
+            var tr = $(this).parents().eq(3);
+            var id = $(tr).data('id');
+            if (tr.data('categoriaid')) {
+                $('table tbody tr[data-id="' + id + '"]').addClass('d-none');
+                $('table tbody tr[data-id="' + id + '"]').data('eliminado', true);
+            }else $('table tbody tr[data-id="' + id + '"]').remove();
+        });
+
+        $('#btnAgregarPuntaje').click(function () {
+            $('tr.puntajes').append(`<td>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control form-control-sm font-weight-bold text-center puntaje" />
+                                        <div class="input-group-append">
+                                            <button class="btn btn-danger btn-sm btn-borrar-puntaje"><i class="fa fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                </td>`);
+            cantidadPuntaje++;
+            $('th.respuesta').prop('colspan', cantidadPuntaje);
+            $('tr.categoria > th').prop('colspan', cantidadPuntaje + 2);
+            $.each($('table tbody tr.pregunta'), function (i, tr) {
+                $(tr).append('<td><textarea class="form-control form-control-sm respuesta" rows="4"></textarea></td>');
+            });
+        });
+
+        $('#tblFormulario tbody tr').parents().eq(1);
+
+        $('table').delegate('button.btn-borrar-puntaje', 'click', function () {
+            var td = $(this).parents().eq(2);
+            $.each($('table tbody tr.pregunta'), function (i, tr) {
+                $(tr).find('td')[td.index() + 1].remove();
+            });
+            td.remove();
+            cantidadPuntaje--;
+            $('th.respuesta').prop('colspan', cantidadPuntaje);
+            $('tr.categoria > th').prop('colspan', cantidadPuntaje + 2);
+        });
+
+
+        $('table').delegate('button.btn-agregar-pregunta', 'click', function () {
+            var tr = $(this).parents().eq(3);
+            var id = $(tr).data('id');
+            var lastPregunta = $('#tblFormulario').find(`tr.pregunta[data-id="${id}"]`).last()
+            var rowsPregunta = '';
+            cantidadPuntaje;
+            for (var i = 0; i < cantidadPuntaje; i++) rowsPregunta += '<td><textarea class="form-control form-control-sm respuesta" rows="4"></textarea></td>';
+            $(lastPregunta.length == 0 ? tr : lastPregunta).after(`<tr class="pregunta" data-id="${id}">
+                                <td width="20" class="text-center"><button class="btn btn-danger btn-sm btn-borrar-pregunta"><i class="fa fa-trash"></i></button></td>
+                                <td>
+                                    <input class="form-control form-control-sm font-weight-bold titulo" placeholder="Titulo" />
+                                    <textarea class="form-control form-control-sm descripcion" placeholder="Contenido" rows="3"></textarea>
+                                </td>
+                               ${rowsPregunta}
+                            </tr>`);
+        });
+
+        $('table').delegate('button.btn-borrar-pregunta', 'click', function () {
+            var tr = $(this).parents().eq(1);
+            if (tr.data('preguntaid')) {
+                tr.addClass('d-none');
+                tr.data('eliminado', true);
+            }
+            else  tr.remove();
+        });
+
+        $('#btnGuardar').click(function () {
+            var model = nuevo.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Verificacion/Editar",
+                data: model,
+                beforeSend: function () {
+                    $("#msgEditar").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    Swal.fire({
+                        title: 'Perfecto!',
+                        text: 'Se editó la verificación'
+                    }).then(x => {
+                        location.href = '/Verificacion/Modelar';
+                    });
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgEditar', data);
+                        $("#msgEditar").slideDown();
+                        $('#btnGuardar').removeAttr("disabled");
+                    })
+                }
+            });
+        });
+
+        $('#TipoVerificacionId').change(function () {
+            var option = $(this).find('option:selected');
+            if (option.data('vp') == 'True') $('div.vp').removeClass('d-none')
+            else {
+                $('div.vp').addClass('d-none')
+                $('#VP, #IGP').prop('checked', false);
+            }
+
+            if (option.data('igp') == 'True') $('div.igp').removeClass('d-none')
+            else {
+                $('div.igp').addClass('d-none')
+                $('#IGP').prop('checked', false);
+            }
+        });
+    });
+</script>
+

@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@ViewBag.Title - ALICORP</title>
+    <!-- Favicon -->
+    <link href="~/favicon.ico" rel="icon" type="image/vnd.microsoft.icon" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="~/plugins/fontawesome-free/css/all.min.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="~/dist/css/adminlte.min.css">
+    <!-- Google Font: Source Sans Pro -->
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    <!-- Animatecss -->
+    <link href="~/plugins/animatecss/animate.css" rel="stylesheet" />
+    <!-- jQuery -->
+    <script src="~/plugins/jquery/jquery-3.6.0.min.js"></script>
+    <!-- Site -->
+    <link href="~/css/site.css" rel="stylesheet" />
+    <!-- Alicorp ICONS -->
+    <link href="~/css/alicorp-icons.css" rel="stylesheet" />
+</head>
+<body class="hold-transition sidebar-mini text-sm">
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-light">
+            @await Component.InvokeAsync("TopMenu")
+        </nav>
+        <!-- /.navbar -->
+
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="/" class="brand-link navbar-dark text-white">
+                <img src="~/images/logo.png"
+                     alt="Logo"
+                     class="brand-image"
+                     style="opacity: .8">
+                <span class="brand-text font-weight-light">LICORP</span>
+            </a>
+
+            @await Component.InvokeAsync("LeftMenu")
+        </aside>
+
+        <div class="content-wrapper">
+            <!-- Main content -->
+            <section class="content">
+
+                @RenderBody()
+
+            </section>
+            <!-- /.content -->
+        </div>
+        <!-- /.content-wrapper -->
+        @if (ViewBag.WithOutFooter == null)
+        {
+            <footer class="main-footer text-right">
+                <img src="~/images/logo-alicorp.png" height="30" />
+            </footer>
+        }
+    </div>
+
+    <!-- Bootstrap 4 -->
+    <script src="~/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="~/dist/js/adminlte.min.js"></script>
+    <!-- Helper -->
+    <script src="~/js/helper.js"></script>
+    <!-- Alertas -->
+    <script src="~/js/alertas.js"></script>
+</body>
+</html>

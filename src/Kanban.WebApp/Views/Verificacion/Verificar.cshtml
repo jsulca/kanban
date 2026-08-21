@@ -1,0 +1,395 @@
+﻿@model Verificacion
+@{
+    ViewBag.Title = "Nueva Lista de Verificación";
+    List<Respuesta> respuestas = Model.Categorias[0].Preguntas[0].Respuestas;
+    List<Estructura> tableros = ViewBag.Tableros;
+    List<Estructura> estructuras = ViewBag.Estructuras;
+    int valorMaximo = respuestas.Select(x => x.Valor).Max();
+    int cantidadPregunta = 0;
+}
+<style>
+    .btn-group > .btn {
+        flex-basis: 0;
+        flex-grow: 1;
+    }
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="fas fa-user-check"></i>&nbsp;@Model.Nombre
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.Instruccion))
+                {
+                    <div class="form-row">
+                        <div class="col-12">
+                            <b>Instrucciones:</b>
+                            <p class="mb-0" style="white-space: pre-line">@Model.Instruccion</p>
+                        </div>
+                    </div>
+                    <hr />
+                }
+                <div class="form-row">
+                    <div class="col-3">
+                        <div class="form-group">
+                            <label>Fecha:</label>
+                            <input class="form-control form-control-sm" placeholder="Fecha" value="@DateTime.Today.ToString("dd/MM/yyyy")" disabled />
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="form-group">
+                            <label>Hora:</label>
+                            <input class="form-control form-control-sm" placeholder="Hora" value="@DateTime.Now.ToString("HH:mm")" disabled />
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Observador:</label>
+                            <input class="form-control form-control-sm" placeholder="Observador" value="@ViewBag.Empleado" disabled />
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Tablero: <span class="text-danger">(*)</span></label>
+                            <select class="form-control form-control-sm" id="TableroId">
+                                @foreach (var item in tableros)
+                                {
+                                    <option value="@item.Id">@item.Descripcion</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label>Célula: <span class="text-danger">(*)</span></label>
+                            <select class="form-control form-control-sm" id="EstructuraId">
+                                @foreach (var item in estructuras)
+                                {
+                                    <option value="@item.Id">@item.Descripcion</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Observado: <span class="text-danger">(*)</span></label>
+                            <input class="form-control form-control-sm" id="Encargado" />
+                        </div>
+                    </div>
+                    @if (Model.InstructivoEstandar)
+                    {
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label for="InstructivoEstandar">Instructivo Estándar / Gestión Industrial: <span class="text-danger">(*)</span></label>
+                                <textarea class="form-control form-control-sm" rows="4" id="InstructivoEstandar"></textarea>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <hr />
+                <div class="text-center">
+                    <button type="button" class="btn btn-success" id="btnGuardar"><i class="fa fa-save"></i>&nbsp; Guardar</button>
+                    <a role="button" class="btn btn-warning" href="/Verificacion/Index"><i class="fa fa-chevron-left"></i>&nbsp; Retroceder</a>
+                </div>
+                <div id="msgEditar" class="mt-1"></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="row">
+            <div class="col-md-4 bg-white text-center font-weight-bold">Escala de evaluación</div>
+            @foreach (var item in respuestas)
+            {
+                <div class="col bg-white text-center font-weight-bold border border-warning">@item.Valor</div>
+            }
+        </div>
+        <br />
+    </div>
+    @foreach (var item in Model.Categorias)
+    {
+        <div class="col-12">
+            <div class="card card-default">
+                <div class="card-header bg-blue">
+                    <h3 class="card-title text-white">@item.Orden.&nbsp;@item.Descripcion</h3>
+                </div>
+                <div class="card-body">
+                    @foreach (var item2 in item.Preguntas)
+                    {
+                        cantidadPregunta++;
+                        <div class="form-row pb-1 pt-1 border-bottom">
+                            <div class="col-md-4 mb-1">
+                                @if (!string.IsNullOrEmpty(item2.Titulo))
+                                {
+                                    <b>@item2.Titulo: </b>
+                                }
+                                <p class="mb-0" style="white-space: pre-line">@item2.Descripcion</p>
+                            </div>
+                            <div class="col d-flex align-items-center">
+                                <div class="btn-group btn-group-toggle btn-block row" data-toggle="buttons">
+                                    @foreach (var item3 in item2.Respuestas)
+                                    {
+                                        <label class="btn btn-outline-secondary option col @(string.IsNullOrWhiteSpace(item3.Descripcion) ? "disabled" : "")">
+                                            <input type="radio" name="p@(item2.Id)" id="r@(string.Format("{0}_{1}_{2}", item.Id, item2.Id, item3.Valor))"
+                                                   value="@item3.Valor" autocomplete="off" data-categoriaid="@item.Id" data-preguntaid="@item2.Id" data-descripcion="@item3.Descripcion" @(string.IsNullOrWhiteSpace(item3.Descripcion) ? "disabled" : "") /> @item3.Descripcion
+                                            </label>
+                                        }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    @if (Model.ResumenCategoria)
+    {
+        <div class="col-12">
+            <div class="card card-warning">
+                <div class="card-header">
+                    <h3 class="card-title">Resumen Por Categoria</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-row">
+                        <div class="col-12">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead>
+                                        <tr class="bg-dark">
+                                            <th width="20">#</th>
+                                            <th>Categoria</th>
+                                            <th width="150">Nota</th>
+                                            <th width="150">Puntaje</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.Categorias.OrderBy(x => x.Orden))
+                                        {
+                                            <tr>
+                                                <td class="text-right">@item.Orden</td>
+                                                <td>@item.Descripcion</td>
+                                                <td class="text-center font-weight-bold"><span class="resumen-categoria" data-maximo="@(item.Preguntas.Count * valorMaximo)" data-categoriaid="@item.Id">0</span>/@(item.Preguntas.Count * valorMaximo)</td>
+                                                <td class="text-center font-weight-bold"><span class="nota-categoria" data-categoriaid="@item.Id">0.0</span>%</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="col-12">
+        <div class="card card-info">
+            <div class="card-header">
+                <h3 class="card-title text-white">FeedBack</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Nota:</label>
+                            <input class="form-control font-weight-bold text-center" disabled value="0/@(cantidadPregunta * valorMaximo)" id="Nota" />
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Puntaje Total:</label>
+                            <input class="form-control font-weight-bold text-center" disabled value="0.0 %" id="PuntajeTotal" />
+                        </div>
+                    </div>
+                    @if (Model.Rom)
+                    {
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label>¿Requiere ROM?:</label>
+                                <select class="form-control" id="Rom">
+                                    <option value="false">NO</option>
+                                    <option value="true">SI</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label>Nº ROM:</label>
+                                <input class="form-control font-weight-bold text-center text-success" disabled id="NroRom" />
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.Fortaleza)
+                    {
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="Fortaleza">Fortalezas:</label>
+                                <textarea id="Fortaleza" class="form-control form-control-sm" rows="4"></textarea>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.Oportunidad)
+                    {
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="Oportunidad">Oportunidades:</label>
+                                <textarea id="Oportunidad" class="form-control form-control-sm" rows="4"></textarea>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.PlanAccion)
+                    {
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label for="PlanAccion">Planes de Accion:</label>
+                                <div class="mb-1 text-right">
+                                    <button id="btnNuevoPlanAccion" class="btn btn-sm btn-success"><i class="fa fa-plus"></i>&nbsp; Nuevo Plan de Accion</button>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table id="tblPlanAccion" class="table table-sm table-bordered table-hover">
+                                        <thead>
+                                            <tr class="bg-secondary">
+                                                <th width="20"></th>
+                                                <th>Accion</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- SweetAlert2 -->
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+    var puntajeMaximo = @(cantidadPregunta * valorMaximo);
+
+    var verificar = {
+        ObtenerModelo: function () {
+            var model = {
+                'verificacionId': @Model.Id,
+                'encargado': $('#Encargado').val(),
+                'rom': $('#Rom').val(),
+                'nroRom': $('#NroRom').val(),
+                'fortaleza': $('#Fortaleza').val(),
+                'oportunidad': $('#Oportunidad').val(),
+                'tableroId': $('#TableroId').val(),
+                'estructuraId': $('#EstructuraId').val(),
+                'instructivoEstandar': $('#InstructivoEstandar').val(),
+                'puntajeMaximo': puntajeMaximo,
+                'puntajeObtenido': 0,
+                'VP': @Model.VP.ToString().ToLower(),
+                'IGP': @Model.IGP.ToString().ToLower(),
+                'planesAccion': []
+            };
+
+            var inputs = $('input[type="radio"]:checked');
+            var valor = 0;
+            $.each(inputs, function (i, inp) {
+                model['Respuestas[' + i + '].CategoriaId'] = inp.dataset.categoriaid;
+                model['Respuestas[' + i + '].PreguntaId'] = inp.dataset.preguntaid;
+                model['Respuestas[' + i + '].Descripcion'] = inp.dataset.descripcion;
+                model['Respuestas[' + i + '].Valor'] = inp.value;
+
+                valor += inp.value * 1;
+            });
+            model.puntajeObtenido = valor;
+
+            $.each($('#tblPlanAccion tbody tr'), function (i, tr) {
+                model['PlanesAccion[' + i + '].Descripcion'] = $(tr).find('input.descripcion').val()
+            });
+
+            return model;
+        }
+    };
+
+    $(function () {
+        $('input[type="radio"]').change(function () {
+            var inputs = $('input[type="radio"]:checked');
+            var valor = 0, categoria = 0, maximo = 0;
+
+            $('span.resumen-categoria').text('0');
+            $.each(inputs, function (i, inp) {
+                valor += inp.value * 1;
+                categoria = $(`span.resumen-categoria[data-categoriaid="${inp.dataset.categoriaid}"]`).text() * 1;
+                maximo = $(`span.resumen-categoria[data-categoriaid="${inp.dataset.categoriaid}"]`).data('maximo') * 1;
+
+                $(`span.resumen-categoria[data-categoriaid="${inp.dataset.categoriaid}"]`).text(categoria + (inp.value * 1));
+                $(`span.nota-categoria[data-categoriaid="${inp.dataset.categoriaid}"]`).text(helper.format.decimal(((categoria + (inp.value * 1)) / maximo) * 100));
+
+            });
+            $('#PuntajeTotal').val(helper.format.decimal((valor / puntajeMaximo) * 100) + ' %');
+            $('#Nota').val(`${valor}/${puntajeMaximo}`);
+        });
+
+        $('#Rom').change(function () {
+            var valor = $(this).val();
+            if (valor == 'true') $('#NroRom').removeAttr('disabled');
+            else $('#NroRom').val(null).attr('disabled', 'disabled');
+        });
+
+        $('#btnGuardar').click(function () {
+            var model = verificar.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Verificacion/Verificar",
+                data: model,
+                beforeSend: function () {
+                    $("#msgEditar").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                },
+                complete: function () { },
+                success: function (result) {
+                    Swal.fire({
+                        title: 'Perfecto!',
+                        text: 'Se registro la verificación'
+                    }).then(() => {
+                        location.href = '/Verificacion/Index';
+                    });
+                },
+                error: function (result) {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgEditar', data);
+                        $("#msgEditar").slideDown();
+                        $('#btnGuardar').removeAttr("disabled");
+                    })
+                }
+            });
+        });
+
+        $('#btnNuevoPlanAccion').click(function () {
+            var tr = `<tr>
+                        <td class="text-center"><a class="option text-danger eliminar"><i class="fa fa-trash"></i></a></td>
+                        <td><input class="form-control form-control-sm descripcion" maxlength = "30" /></td>
+                </tr>`
+            $('#tblPlanAccion tbody').append(tr);
+        });
+
+        $('#tblPlanAccion tbody').delegate('a.eliminar', 'click', function () {
+            var tr = $(this).parents().eq(1);
+            tr.remove();
+        });
+
+        $('#TableroId').change(function () {
+            var id = $(this).val();
+            $('#EstructuraId option').remove();
+            $.get('/Estructura/Arbol', { id }, function (data) {
+                var options = $.map(data, x => `<option value="${x.Id}">${x.Descripcion}</option>`);
+                $('#EstructuraId').append(options);
+            });
+        });
+    });
+
+</script>

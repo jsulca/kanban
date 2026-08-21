@@ -1,0 +1,95 @@
+﻿@model Instancia
+@{
+    List<Color> colores = ViewBag.Colores;
+}
+<div class="modal-dialog animated bounceInDown">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Editar Instancia</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            @Html.HiddenFor(m => m.Id)
+            <div class="form-row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="Codigo">Abreviatura: </label>
+                        @Html.TextBoxFor(m => m.Abreviatura, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="ColorFondoId">Color Fondo: <span class="text-danger">(*)</span></label>
+                        @Html.DropDownListFor(m => m.ColorFondoId, new SelectList(colores, "Id", "Descripcion"), new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="ColorTextoId">Color Texto: <span class="text-danger">(*)</span></label>
+                        @Html.DropDownListFor(m => m.ColorTextoId, new SelectList(colores, "Id", "Descripcion"), new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="Descripcion">Descripción: <span class="text-danger">(*)</span></label>
+                        @Html.TextBoxFor(m => m.Descripcion, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="msgEditar"></div>
+        <div class="modal-footer">
+            <button id="btnGuardar" type="button" class="btn btn-sm btn-primary"><i class="fa fa-check"></i>&nbsp; Guardar</button>
+            <a href="javascript:void(0)" class="btn btn-sm btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp; Cancelar</a>
+        </div>
+    </div>
+</div>
+<script>
+    var nuevo = {
+        ObtenerModelo: function () {
+            var model = {
+                'id': $('#Id').val(),
+                'abreviatura': $('#Abreviatura').val(),
+                'descripcion': $('#Descripcion').val(),
+                'colorFondoId': $('#ColorFondoId').val(),
+                'colorTextoId': $('#ColorTextoId').val()
+            };
+            return model;
+        }
+    };
+    $(function () {
+        $('#btnGuardar').click(function () {
+            var model = nuevo.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Instancia/Editar",
+                data: model,
+                beforeSend: function () {
+                    $("#msgEditar").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    model['id'] = result;
+                    @string.Format("{0}(model);", ViewBag.CallBack)
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    //helper.errorShow('#msgEditar', result.responseText);
+                    $("#msgEditar").slideDown();
+                    $('#btnGuardar').removeAttr("disabled");
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgEditar', data);
+                    })
+                }
+            });
+        });
+    });
+</script>

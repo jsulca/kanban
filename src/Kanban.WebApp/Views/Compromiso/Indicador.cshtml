@@ -1,0 +1,831 @@
+﻿@model List<Estructura>
+@{
+    ViewBag.Title = "Indicadores";
+    string[] monthNames = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthGenitiveNames;
+}
+<link href="~/plugins/chart.js/Chart.min.css" rel="stylesheet" />
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="fa fa-chart"></i>&nbsp;Indicadores de Desempeño - Gestión de Compromisos
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-body bg-light">
+                <div class="form-row" id="Filtros">
+                    <div class="col-4">
+                        <label for="FTablero">Tablero:</label>
+                        @Html.DropDownList("FTableroId", new SelectList(Model, "Id", "Descripcion"), new { @class = "form-control form-control-sm" })
+                    </div>
+                    <div class="col-4">
+                        <label for="FAnio">Año:</label>
+                        <select class="form-control form-control-sm" id="FAnio">
+                            @for (int i = DateTime.Today.Year; i >= 2020; i--)
+                            {
+                                <option value="@i">@i</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <label for="FMes">Mes:</label>
+                        <select class="form-control form-control-sm text-capitalize" id="FMes">
+                            @for (int i = 0; i < monthNames.Length - 1; i++)
+                            {
+                                <option value="@(i + 1)" @(i + 1 == DateTime.Today.Month ? "selected" : "")>@monthNames[i]</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-6">
+                        <label>Inicio: </label>
+                        <input type="date" class="form-control form-control-sm" />
+                        <input type="month" class="form-control form-control-sm" />
+                    </div>
+                    <div class="col-6">
+                        <label>Fin: </label>
+                        <input type="date" class="form-control form-control-sm" />
+                        <input type="month" class="form-control form-control-sm" />
+                    </div>
+                </div>
+                <div id="mensajes" class="mt-1"></div>
+            </div>
+            <div class="card-footer text-right bg-white">
+                <button type="button" class="btn btn-success" id="btnBuscar"><i class="fa fa-search"></i>&nbsp; Buscar</button>
+                <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 indicador" hidden="hidden">
+        <div class="card card-primary card-outline card-outline-tabs mb-0 shadow-none">
+            <div class="card-header p-0 border-bottom-0">
+                <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="pill" href="#tab1" role="tab">Por Estado</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="pill" href="#tab2" role="tab">Por Responsable</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="pill" href="#tab3" role="tab">Por Area</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <div class="tab-pane fade active show" id="tab1" role="tabpanel">
+                        <div class="form-row">
+                            <div class="col-md-12">
+                                <canvas id="chartIndicadorPorEstado_1" height="100"></canvas>
+                                <hr />
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-hover text-uppercase" id="tblIndicadorPorEstado_1">
+                                        <thead>
+                                            <tr>
+                                                <th class="bg-danger font-weight-bold" width="350">Indicador / Estado</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgba(40,167,69, .8)">Ejecutadas</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgba(255,193,7, .8)">En Proceso</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgb(220,53,69, .8)">Pendientes</th>
+                                                <th class="bg-info font-weight-bold" width="120">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <hr />
+                                <canvas id="chartIndicadorPorEstado_2" height="100"></canvas>
+                                <hr />
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-hover text-uppercase" id="tblIndicadorPorEstado_2">
+                                        <thead>
+                                            <tr>
+                                                <th class="bg-danger font-weight-bold" width="350">Fuera de fecha</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <hr />
+                                <canvas id="chartIndicadorPorEstado_3" height="100"></canvas>
+                                <hr />
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-hover text-uppercase" id="tblIndicadorPorEstado_3">
+                                        <thead>
+                                            <tr>
+                                                <th class="bg-danger font-weight-bold" width="350">Reprogramados</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tab2" role="tabpanel">
+                        <div class="form-row">
+                            <div class="col-md-12">
+                                <hr />
+                                <canvas id="chartIndicadorPorResponsable"></canvas>
+                                <hr />
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-hover text-uppercase" id="tblIndicadorPorResponsable">
+                                        <thead>
+                                            <tr>
+                                                <th class="bg-danger font-weight-bold" width="350">Responsable</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgba(40,167,69, .8)">Ejecutadas</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgba(255,193,7, .8)">En Proceso</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgb(220,53,69, .8)">Pendientes</th>
+                                                <th class="bg-info font-weight-bold" width="120">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tab3" role="tabpanel">
+                        <div class="form-row">
+                            <div class="col-md-12">
+                                <hr />
+                                <canvas id="chartIndicadorPorArea_1" height="100"></canvas>
+                                <hr />
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-hover text-uppercase" id="tblIndicadorPorArea_1">
+                                        <thead>
+                                            <tr>
+                                                <th class="bg-danger font-weight-bold" width="350">Areas</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <hr />
+                                <canvas id="chartIndicadorPorArea_2" height="100"></canvas>
+                                <hr />
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-hover text-uppercase" id="tblIndicadorPorArea_2">
+                                        <thead>
+                                            <tr>
+                                                <th class="bg-danger font-weight-bold" width="350">Areas</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgba(40,167,69, .8)">Ejecutadas</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgba(255,193,7, .8)">En Proceso</th>
+                                                <th class="bg-danger font-weight-bold" data-color="rgb(220,53,69, .8)">Pendientes</th>
+                                                <th class="bg-info font-weight-bold" width="120">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        <tfoot></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- /.card -->
+        </div>
+    </div>
+</div>
+<script src="~/plugins/chart.js/Chart.min.js"></script>
+<script src="~/plugins/chart.js/utils.js"></script>
+<script>
+    var indicador = {
+        ObtenerModelo: function () {
+            var model = {
+                'tableroId': $('#FTableroId').val(),
+                'anio': $('#FAnio').val(),
+                'mes': $('#FMes').val(),
+            };
+
+            return model;
+        },
+        RandomColor: function () {
+            var o = Math.round,
+                r = Math.random,
+                s = 255;
+
+            var red = o(r() * s),
+                green = o(r() * s),
+                blue = o(r() * s);
+
+            return 'rgba(' + red + ',' + green + ',' + blue + ', .8)';
+        },
+        IndicadorPorEstado_1: function (indicadores, listaCompromiso1, listaCompromiso2) {
+            var tbody = $('#tblIndicadorPorEstado_1 tbody'),
+                tfoot = $('#tblIndicadorPorEstado_1 tfoot');
+
+            tbody.children('tr').remove();
+            tfoot.children('tr').remove();
+
+            var estados = [
+                { nombre: "Ejecutadas", estados: [@((int)EstadoCompromiso.FINALIZADO)] },
+                { nombre: "En Proceso", estados: [@((int)EstadoCompromiso.PROGRAMADO), @((int)EstadoCompromiso.REPROGRAMADO), @((int)EstadoCompromiso.POR_VERIFICAR)] },
+                { nombre: "Pendientes", estados: [@((int)EstadoCompromiso.NUEVO), @((int)EstadoCompromiso.PENDIENTE), @((int)EstadoCompromiso.FUERA_DE_FECHA)] },
+            ];
+
+            var trs = '',
+                cantidadEjecutadas = 0, cantidadEnProceso = 0, cantidadPendientes = 0,
+                contadorEjecutadas = 0, contadorEnProceso = 0, contadorPendientes = 0;
+
+            $.each(indicadores, function (x, indicador) {
+                cantidadEjecutadas = listaCompromiso2.filter(y => indicador.Nombre == y.Impacto && estados[0].estados.includes(y.Estado)).length;
+                cantidadEnProceso = listaCompromiso1.filter(y => indicador.Nombre == y.Impacto && estados[1].estados.includes(y.Estado)).length;
+                cantidadPendientes = listaCompromiso1.filter(y => indicador.Nombre == y.Impacto && estados[2].estados.includes(y.Estado)).length;
+
+                trs += `<tr>
+                            <th class="text-center bg-light">${indicador.Nombre}</th>
+                            <td class="text-center">${cantidadEjecutadas}</td>
+                            <td class="text-center">${cantidadEnProceso}</td>
+                            <td class="text-center">${cantidadPendientes}</td>
+                            <th class="text-center bg-info">${cantidadEjecutadas + cantidadEnProceso + cantidadPendientes}</th>
+                        </tr>`;
+
+
+                contadorEjecutadas += cantidadEjecutadas;
+                contadorEnProceso += cantidadEnProceso;
+                contadorPendientes += cantidadPendientes;
+
+            });
+
+            tbody.append(trs);
+            tfoot.append(`<tr>
+                <th class="text-center bg-info">Total</th>
+                <th class="text-center bg-info">${contadorEjecutadas}</th>
+                <th class="text-center bg-info">${contadorEnProceso}</th>
+                <th class="text-center bg-info">${contadorPendientes}</th>
+                <th class="text-center bg-warning">${contadorEjecutadas + contadorEnProceso + contadorPendientes}</th>
+                </tr>`);
+
+            //ChartJS
+            indicador.ChartIndicadorPorEstado_1();
+        },
+        IndicadorPorEstado_2: function (indicadores, areas, listaCompromiso) {
+            var thead = $('#tblIndicadorPorEstado_2 thead tr'),
+                tbody = $('#tblIndicadorPorEstado_2 tbody'),
+                tfoot = $('#tblIndicadorPorEstado_2 tfoot');
+
+            thead.children('th.titulo').remove();
+            tbody.children('tr').remove();
+            tfoot.children('tr').remove();
+
+            var thHead = '',
+                trs = '';
+
+            var estados = [@((int)EstadoCompromiso.FUERA_DE_FECHA)];
+            var compromisos = listaCompromiso.filter(x => estados.includes(x.Estado)),
+                cantidad = 0, contadorFila = 0;
+
+            $.each(indicadores, function (x, indicador) { thHead += `<th class="bg-danger font-weight-bold titulo">${indicador.Nombre}</th>`; });
+            thHead += `<th class="bg-info titulo font-weight-bold" width="120">Total</th>`;
+
+            $.each(areas, function (y, area) {
+                contadorFila = 0;
+                trs += `<tr>
+                    <th class="bg-light text-center" data-color="rgba${area.ColorFondo.Rgba}">${area.Descripcion}</th>
+                    ${$.map(indicadores, function (indicador, x) {
+                        cantidad = compromisos.filter(z => z.Impacto == indicador.Nombre && z.AreaId == area.Id).length;
+                        contadorFila += cantidad;
+                        return `<td class="text-center">${cantidad}</td>`;
+                    })}
+                    <th class="bg-info text-center">${contadorFila}</th>
+                </tr>`;
+            });
+
+            thead.append(thHead);
+            tbody.append(trs);
+
+            contadorFila = 0;
+            tfoot.append(`<tr>
+                <th class="text-center bg-info">Total</th>${$.map(indicadores, function (indicador, x) {
+                    cantidad = compromisos.filter(z => z.Impacto == indicador.Nombre).length;
+                    contadorFila += cantidad;
+                    return `<th class="bg-info text-center">${cantidad}</th>`;
+                })}
+                <th class="bg-warning text-center">${contadorFila}</th>
+            </tr>`);
+
+            //ChartJS
+            indicador.ChartIndicadorPorEstado_2();
+
+        },
+        IndicadorPorEstado_3: function (indicadores, areas, listaCompromiso) {
+            var thead = $('#tblIndicadorPorEstado_3 thead tr'),
+                tbody = $('#tblIndicadorPorEstado_3 tbody'),
+                tfoot = $('#tblIndicadorPorEstado_3 tfoot');
+
+            thead.children('th.titulo').remove();
+            tbody.children('tr').remove();
+            tfoot.children('tr').remove();
+
+            var thHead = '',
+                trs = '';
+
+            var estados = [@((int)EstadoCompromiso.REPROGRAMADO)];
+            var compromisos = listaCompromiso.filter(x => estados.includes(x.Estado)),
+                cantidad = 0, contadorFila = 0;
+
+            $.each(indicadores, function (x, indicador) { thHead += `<th class="bg-danger font-weight-bold titulo">${indicador.Nombre}</th>`; });
+            thHead += `<th class="bg-info titulo font-weight-bold" width="120">Total</th>`;
+
+            $.each(areas, function (y, area) {
+                contadorFila = 0;
+                trs += `<tr>
+                    <th class="bg-light text-center" data-color="rgba${area.ColorFondo.Rgba}">${area.Descripcion}</th>
+                    ${$.map(indicadores, function (indicador, x) {
+                        cantidad = compromisos.filter(z => z.Impacto == indicador.Nombre && z.AreaId == area.Id).length;
+                        contadorFila += cantidad;
+                        return `<td class="text-center">${cantidad}</td>`;
+                    })}
+                    <th class="bg-info text-center">${contadorFila}</th>
+                </tr>`;
+            });
+
+            thead.append(thHead);
+            tbody.append(trs);
+
+            contadorFila = 0;
+            tfoot.append(`<tr>
+                <th class="text-center bg-info">Total</th>${$.map(indicadores, function (indicador, x) {
+                    cantidad = compromisos.filter(z => z.Impacto == indicador.Nombre).length;
+                    contadorFila += cantidad;
+                    return `<th class="bg-info text-center">${cantidad}</th>`;
+                })}
+                <th class="bg-warning text-center">${contadorFila}</th>
+            </tr>`);
+
+            //ChartJS
+            indicador.ChartIndicadorPorEstado_3();
+        },
+        IndicadorPorResponsable: function (responsables, listaCompromiso1, listaCompromiso2) {
+            var tbody = $('#tblIndicadorPorResponsable tbody'),
+                tfoot = $('#tblIndicadorPorResponsable tfoot');
+
+            tbody.children('tr').remove();
+            tfoot.children('tr').remove();
+
+            var estados = [
+                { nombre: "Ejecutadas", estados: [@((int)EstadoCompromiso.FINALIZADO)] },
+                { nombre: "En Proceso", estados: [@((int)EstadoCompromiso.PROGRAMADO), @((int)EstadoCompromiso.REPROGRAMADO), @((int)EstadoCompromiso.POR_VERIFICAR)] },
+                { nombre: "Pendientes", estados: [@((int)EstadoCompromiso.NUEVO), @((int)EstadoCompromiso.PENDIENTE), @((int)EstadoCompromiso.FUERA_DE_FECHA)] },
+            ];
+
+            var trs = '',
+                cantidadEjecutadas = 0, cantidadEnProceso = 0, cantidadPendientes = 0,
+                contadorEjecutadas = 0, contadorEnProceso = 0, contadorPendientes = 0;
+
+            $.each(responsables, function (x, responsable) {
+                cantidadEjecutadas = listaCompromiso2.filter(y => responsable.Id == y.ResponsableId && estados[0].estados.includes(y.Estado)).length;
+                cantidadEnProceso = listaCompromiso1.filter(y => responsable.Id == y.ResponsableId && estados[1].estados.includes(y.Estado)).length;
+                cantidadPendientes = listaCompromiso1.filter(y => responsable.Id == y.ResponsableId && estados[2].estados.includes(y.Estado)).length;
+
+                trs += `<tr>
+                            <th class="text-center bg-light">${responsable.Nombre} ${responsable.ApellidoPaterno}</th>
+                            <td class="text-center">${cantidadEjecutadas}</td>
+                            <td class="text-center">${cantidadEnProceso}</td>
+                            <td class="text-center">${cantidadPendientes}</td>
+                            <th class="text-center bg-info">${cantidadEjecutadas + cantidadEnProceso + cantidadPendientes}</th>
+                        </tr>`;
+
+                contadorEjecutadas += cantidadEjecutadas;
+                contadorEnProceso += cantidadEnProceso;
+                contadorPendientes += cantidadPendientes;
+            });
+
+            tbody.append(trs);
+            tfoot.append(`<tr>
+                <th class="text-center bg-info">Total</th>
+                <th class="text-center bg-info">${contadorEjecutadas}</th>
+                <th class="text-center bg-info">${contadorEnProceso}</th>
+                <th class="text-center bg-info">${contadorPendientes}</th>
+                <th class="text-center bg-warning">${contadorEjecutadas + contadorEnProceso + contadorPendientes}</th>
+                </tr>`);
+
+            //ChartJS
+            indicador.ChartIndicadorPorResponsable();
+        },
+        IndicadorPorArea_1: function (areas, indicadores, listaCompromiso1, listaCompromiso2) {
+            var thead = $('#tblIndicadorPorArea_1 thead tr'),
+                tbody = $('#tblIndicadorPorArea_1 tbody'),
+                tfoot = $('#tblIndicadorPorArea_1 tfoot');
+
+            thead.children('th.titulo').remove();
+            tbody.children('tr').remove();
+            tfoot.children('tr').remove();
+
+            var thHead = '',
+                trs = '';
+
+            $.each(indicadores, function (x, indicador) { thHead += `<th class="bg-danger font-weight-bold titulo">${indicador.Nombre}</th>`; });
+            thHead += `<th class="bg-info titulo font-weight-bold" width="120">Total</th>`;
+
+            var compromisos = [...listaCompromiso1, ...listaCompromiso2]
+                cantidad = 0, contadorFila = 0;
+
+            $.each(areas, function (y, area) {
+                contadorFila = 0;
+                trs += `<tr>
+                    <th class="bg-light text-center">${area.Descripcion}</th>
+                    ${$.map(indicadores, function (ind, x) {
+                        cantidad = compromisos.filter(z => z.Impacto == ind.Nombre && z.AreaId == area.Id).length;
+                    contadorFila += cantidad;
+                    return `<td class="text-center">${cantidad}</td>`;
+                })}
+                    <th class="bg-info text-center">${contadorFila}</th>
+                </tr>`;
+            });
+
+            thead.append(thHead);
+            tbody.append(trs);
+
+            contadorFila = 0;
+            tfoot.append(`<tr>
+                <th class="text-center bg-info">Total</th>${$.map(indicadores, function (ind, x) {
+                    cantidad = compromisos.filter(z => z.Impacto == ind.Nombre && z.AreaId > 0).length;
+                    contadorFila += cantidad;
+                return `<th class="bg-info text-center">${cantidad}</th>`;
+            })}
+                <th class="bg-warning text-center">${contadorFila}</th>
+            </tr>`);
+            //ChartJS
+            indicador.ChartIndicadorPorArea_1();
+        },
+        IndicadorPorArea_2: function (areas, listaCompromiso1, listaCompromiso2) {
+            var tbody = $('#tblIndicadorPorArea_2 tbody'),
+                tfoot = $('#tblIndicadorPorArea_2 tfoot');
+
+            tbody.children('tr').remove();
+            tfoot.children('tr').remove();
+
+            var estados = [
+                { nombre: "Ejecutadas", estados: [@((int)EstadoCompromiso.FINALIZADO)] },
+                { nombre: "En Proceso", estados: [@((int)EstadoCompromiso.PROGRAMADO), @((int)EstadoCompromiso.REPROGRAMADO), @((int)EstadoCompromiso.POR_VERIFICAR)] },
+                { nombre: "Pendientes", estados: [@((int)EstadoCompromiso.NUEVO), @((int)EstadoCompromiso.PENDIENTE), @((int)EstadoCompromiso.FUERA_DE_FECHA)] },
+            ];
+
+            var trs = '',
+                cantidadEjecutadas = 0, cantidadEnProceso = 0, cantidadPendientes = 0,
+                contadorEjecutadas = 0, contadorEnProceso = 0, contadorPendientes = 0;
+
+            $.each(areas, function (x, area) {
+                cantidadEjecutadas = listaCompromiso2.filter(y => area.Id == y.AreaId && estados[0].estados.includes(y.Estado)).length;
+                cantidadEnProceso = listaCompromiso1.filter(y => area.Id == y.AreaId && estados[1].estados.includes(y.Estado)).length;
+                cantidadPendientes = listaCompromiso1.filter(y => area.Id == y.AreaId && estados[2].estados.includes(y.Estado)).length;
+
+                trs += `<tr>
+                            <th class="text-center bg-light">${area.Descripcion}</th>
+                            <td class="text-center">${cantidadEjecutadas}</td>
+                            <td class="text-center">${cantidadEnProceso}</td>
+                            <td class="text-center">${cantidadPendientes}</td>
+                            <th class="text-center bg-info">${cantidadEjecutadas + cantidadEnProceso + cantidadPendientes}</th>
+                        </tr>`;
+
+                contadorEjecutadas += cantidadEjecutadas;
+                contadorEnProceso += cantidadEnProceso;
+                contadorPendientes += cantidadPendientes;
+            });
+
+            tbody.append(trs);
+            tfoot.append(`<tr>
+                <th class="text-center bg-info">Total</th>
+                <th class="text-center bg-info">${contadorEjecutadas}</th>
+                <th class="text-center bg-info">${contadorEnProceso}</th>
+                <th class="text-center bg-info">${contadorPendientes}</th>
+                <th class="text-center bg-warning">${contadorEjecutadas + contadorEnProceso + contadorPendientes}</th>
+                </tr>`);
+            //ChartJs
+            indicador.ChartIndicadorPorArea_2();
+        },
+        ChartIndicadorPorEstado_1: function () {
+            var estados = $('#tblIndicadorPorEstado_1 thead tr th:nth-child(n+2):nth-child(-n+4)');
+            var indicadores = $('#tblIndicadorPorEstado_1 tbody tr th:first-child');
+
+            var labels = $.map(indicadores, function (i) { return i.innerText });
+            var datasets = [];
+
+            $.each(estados, function (i, estado) {
+                var indice = $(estado).index();
+                var tdsIndicador = $('#tblIndicadorPorEstado_1 tbody tr td:nth-child(' + (indice + 1) + ')');
+
+                datasets.push({
+                    label: estado.innerText,
+                    backgroundColor: estado.dataset.color,
+                    barPercentage: 0.4,
+                    stack: 'Stack 0',
+                    data: $.map(tdsIndicador, function (x) { return parseInt(x.innerText) })
+                });
+            });
+
+            //var cantidadColumnas = datasets[0].data.length,
+            //    cantidadFilas = datasets.length;
+
+            //var total;
+
+            //for (var i = 0; i < cantidadColumnas; i++) {
+            //    total = 0;
+            //    $.each(datasets, function (x, r) {
+            //        total += r.data[i];
+            //    })
+            //    console.log(i, total);
+            //    $.each(datasets, function (x, r) {
+            //        r.data[i] = (r.data[i] / total) * 100;
+            //    })
+            //}
+
+            window.chartIndicadorPorEstado_1.data.labels = labels;
+            window.chartIndicadorPorEstado_1.data.datasets = datasets;
+            window.chartIndicadorPorEstado_1.update();
+        },
+        ChartIndicadorPorEstado_2: function () {
+            var cantidadTitulos = $('#tblIndicadorPorEstado_2 thead tr th.titulo').length;
+            var indicadores = $('#tblIndicadorPorEstado_2 thead tr th:nth-child(n+2):nth-child(-n+' + cantidadTitulos + ')')
+            var areas = $('#tblIndicadorPorEstado_2 tbody tr th:first-child');
+            var labels = $.map(indicadores, function (i) { return i.innerText });
+            var datasets = [];
+
+            $.each(areas, function (i, area) {
+                var tdsInformacion = $(area).parent().children('td');
+                datasets.push({
+                    label: area.innerText,
+                    backgroundColor: area.dataset.color,
+                    barPercentage: 0.4,
+                    stack: 'Stack 0',
+                    data: $.map(tdsInformacion, function (x) { return parseInt(x.innerText) })
+                });
+            });
+
+            window.chartIndicadorPorEstado_2.data.labels = labels;
+            window.chartIndicadorPorEstado_2.data.datasets = datasets;
+            window.chartIndicadorPorEstado_2.update();
+        },
+        ChartIndicadorPorEstado_3: function () {
+            var cantidadTitulos = $('#tblIndicadorPorEstado_3 thead tr th.titulo').length;
+            var indicadores = $('#tblIndicadorPorEstado_3 thead tr th:nth-child(n+2):nth-child(-n+' + cantidadTitulos + ')')
+            var areas = $('#tblIndicadorPorEstado_3 tbody tr th:first-child');
+            var labels = $.map(indicadores, function (i) { return i.innerText });
+            var datasets = [];
+
+            $.each(areas, function (i, area) {
+                var tdsInformacion = $(area).parent().children('td');
+
+                datasets.push({
+                    label: area.innerText,
+                    backgroundColor: area.dataset.color,
+                    stack: 'Stack 0',
+                    barPercentage: 0.4,
+                    data: $.map(tdsInformacion, function (x) { return parseInt(x.innerText) })
+                });
+            });
+
+            window.chartIndicadorPorEstado_3.data.labels = labels;
+            window.chartIndicadorPorEstado_3.data.datasets = datasets;
+            window.chartIndicadorPorEstado_3.update();
+        },
+        ChartIndicadorPorResponsable: function () {
+
+            var estados = $('#tblIndicadorPorResponsable thead tr th:nth-child(n+2):nth-child(-n+4)');
+            var responsables = $('#tblIndicadorPorResponsable tbody tr th:first-child');
+            var labels = $.map(responsables, function (i) { return i.innerText });
+
+            var datasets = [];
+
+            $.each(estados, function (i, estado) {
+                var indice = $(estado).index();
+                var tdsInformacion = $('#tblIndicadorPorResponsable tbody tr td:nth-child(' + (indice + 1) + ')');
+
+                datasets.push({
+                    label: estado.innerText,
+                    backgroundColor: estado.dataset.color,
+                    stack: 'Stack 0',
+                    barPercentage: 0.4,
+                    data: $.map(tdsInformacion, function (x) { return parseInt(x.innerText) })
+                });
+            });
+
+            window.chartIndicadorPorResponsable.data.labels = labels;
+            window.chartIndicadorPorResponsable.data.datasets = datasets;
+            window.chartIndicadorPorResponsable.update();
+        },
+        ChartIndicadorPorArea_1: function () {
+            var cantidadTitulos = $('#tblIndicadorPorArea_1 thead tr th.titulo').length;
+            var indicadores = $('#tblIndicadorPorArea_1 thead tr th:nth-child(n+2):nth-child(-n+' + cantidadTitulos + ')')
+
+            var areas = $('#tblIndicadorPorArea_1 tbody tr th:first-child');
+
+            var labels = $.map(areas, function (i) { return i.innerText });
+            var datasets = [];
+
+            $.each(indicadores, function (i, ind) {
+                var indice = $(ind).index();
+                var tdsIndicador = $('#tblIndicadorPorArea_1 tbody tr td:nth-child(' + (indice + 1) + ')');
+
+                datasets.push({
+                    label: ind.innerText,
+                    backgroundColor: indicador.RandomColor(),
+                    barPercentage: 0.4,
+                    stack: 'Stack 0',
+                    data: $.map(tdsIndicador, function (x) { return parseInt(x.innerText) })
+                });
+            });
+
+            window.chartIndicadorPorArea_1.data.labels = labels;
+            window.chartIndicadorPorArea_1.data.datasets = datasets;
+            window.chartIndicadorPorArea_1.update();
+        },
+        ChartIndicadorPorArea_2: function () {
+            var estados = $('#tblIndicadorPorArea_2 thead tr th:nth-child(n+2):nth-child(-n+4)');
+            var indicadores = $('#tblIndicadorPorArea_2 tbody tr th:first-child');
+
+            var labels = $.map(indicadores, function (i) { return i.innerText });
+            var datasets = [];
+
+            $.each(estados, function (i, estado) {
+                var indice = $(estado).index();
+                var tdsIndicador = $('#tblIndicadorPorArea_2 tbody tr td:nth-child(' + (indice + 1) + ')');
+
+                datasets.push({
+                    label: estado.innerText,
+                    backgroundColor: estado.dataset.color,
+                    barPercentage: 0.4,
+                    stack: 'Stack 0',
+                    data: $.map(tdsIndicador, function (x) { return parseInt(x.innerText) })
+                });
+            });
+
+            window.chartIndicadorPorArea_2.data.labels = labels;
+            window.chartIndicadorPorArea_2.data.datasets = datasets;
+            window.chartIndicadorPorArea_2.update();
+        }
+    };
+    $(function () {
+        $('#btnBuscar').click(function () {
+            var model = indicador.ObtenerModelo();
+            $.ajax({
+                url: "/Compromiso/Indicador",
+                type: "POST",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    $('.indicador').attr('hidden', 'hidden');
+                    $('#FTableroId, #FAnio, #FMes').attr('disabled', 'disabled');
+                },
+                complete: function () {
+                    $('.indicador').removeAttr('hidden');
+                    $('#FTableroId, #FAnio, #FMes').removeAttr('disabled');
+                },
+                success: function (data) {
+                    //Indicador por estado
+                    indicador.IndicadorPorEstado_1(data.Indicadores, data.IndicadorPorEstado_1_1, data.IndicadorPorEstado_1_2);
+                    indicador.IndicadorPorEstado_2(data.Indicadores, data.Areas, data.IndicadorPorEstado_1_1);
+                    indicador.IndicadorPorEstado_3(data.Indicadores, data.Areas, data.IndicadorPorEstado_1_1);
+                    indicador.IndicadorPorResponsable(data.Empleados, data.IndicadorPorEstado_1_1, data.IndicadorPorEstado_1_2);
+                    indicador.IndicadorPorArea_1(data.Areas, data.Indicadores, data.IndicadorPorEstado_1_1, data.IndicadorPorEstado_1_2);
+                    indicador.IndicadorPorArea_2(data.Areas, data.IndicadorPorEstado_1_1, data.IndicadorPorEstado_1_2);
+                },
+                error: function (data) {
+                    $('.indicador').attr('hidden', 'hidden');
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#mensajes', data);
+                    })
+                }
+            });
+        });
+
+        window.chartIndicadorPorEstado_1 = new Chart(document.getElementById('chartIndicadorPorEstado_1').getContext('2d'), {
+            type: 'bar',
+            data: {},
+            options: {
+                title: { display: false },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: { label: tooltipPercent }
+                },
+                responsive: true,
+                scales: {
+                    xAxes: [{ stacked: true }],
+                    yAxes: [{ stacked: true, display: false }]
+                }
+            }
+        });
+
+        window.chartIndicadorPorEstado_2 = new Chart(document.getElementById('chartIndicadorPorEstado_2').getContext('2d'), {
+            type: 'bar',
+            data: {},
+            options: {
+                title: { display: false },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: { label: tooltipPercent }
+                },
+                responsive: true,
+                scales: {
+                    xAxes: [{ stacked: true }],
+                    yAxes: [{ stacked: true, display: false }]
+                }
+            }
+        });
+
+        window.chartIndicadorPorEstado_3 = new Chart(document.getElementById('chartIndicadorPorEstado_3').getContext('2d'), {
+            type: 'bar',
+            data: {},
+            options: {
+                title: { display: false },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: { label: tooltipPercent }
+                },
+                responsive: true,
+                scales: {
+                    xAxes: [{ stacked: true }],
+                    yAxes: [{ stacked: true, display: false }]
+                }
+            }
+        });
+
+        window.chartIndicadorPorResponsable = new Chart(document.getElementById('chartIndicadorPorResponsable').getContext('2d'), {
+            type: 'horizontalBar',
+            data: {},
+            options: {
+                title: { display: false },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false
+                },
+                responsive: true,
+                scales: {
+                    xAxes: [{ stacked: true, display: false }],
+                    yAxes: [{ stacked: true }]
+                }
+            }
+        });
+
+        window.chartIndicadorPorArea_1 = new Chart(document.getElementById('chartIndicadorPorArea_1').getContext('2d'), {
+            type: 'bar',
+            data: {},
+            options: {
+                title: { display: false },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: { label: tooltipPercent }
+                },
+                responsive: true,
+                scales: {
+                    xAxes: [{ stacked: true }],
+                    yAxes: [{ stacked: true, display: false }]
+                }
+            }
+        });
+
+        window.chartIndicadorPorArea_2 = new Chart(document.getElementById('chartIndicadorPorArea_2').getContext('2d'), {
+            type: 'bar',
+            data: {},
+            options: {
+                title: { display: false },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: { label: tooltipPercent }
+                },
+                responsive: true,
+                scales: {
+                    xAxes: [{ stacked: true }],
+                    yAxes: [{ stacked: true, display: false }]
+                }
+            }
+        });
+
+        $('#btnBuscar').trigger('click');
+    });
+
+    var tooltipPercent = (tooltipItem, data) => {
+        var index = tooltipItem.index;
+        var total = 0;
+        $.each(data.datasets, function (x, r) {
+            if (r._meta[Object.keys(data.datasets[x]._meta)[0]].hidden == null) total += r.data[index];
+        })
+        var label = data.datasets[tooltipItem.datasetIndex].label || '';
+        if (label) label += ': ';
+        var porcentaje = (tooltipItem.yLabel / total) * 100;
+        if (!isNaN(porcentaje)) label += helper.format.decimal((tooltipItem.yLabel / total) * 100);
+        else label += 0;
+        return label + ' %';
+    }
+
+</script>

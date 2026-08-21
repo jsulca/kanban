@@ -1,0 +1,124 @@
+﻿@model List<Menu>
+@{
+    ViewBag.Title = "Dashboard";
+    ViewBag.WithOutFooter = true;
+}
+
+<div class="row">
+    <div class="col-lg col-md-12 text-center">
+        <img src="~/images/logo-suma.png" width="180" style="height: 50px !important;" />
+    </div>
+    <div class="col-lg-7 col-md-12">
+        <div class="card card-default">
+            <div class="card-header bg-danger">
+                <h3 class="text-center mb-0">
+                    <img src="~/images/a-alicorp.png" height="30" style="padding-bottom: 2px" />&nbsp;
+                    Gestión de Desempeño
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg col-md-12 text-center">
+        <img src="~/images/logo-ola.png" height="50" />
+    </div>
+
+</div>
+<div class="row mt-3">
+    <div class="col">
+        <div class="card card-default">
+            <div class="card-header">
+                <h4 class="text-center mb-0">
+                    <i class="fa fa-cogs"></i>&nbsp; Gestión de Procesos
+                </h4>
+            </div>
+        </div>
+        <div class="row mt-4">
+            @{
+                // Los grupos se pintan abiertos: antes había que adivinar que los
+                // botones grises escondían algo, y la pantalla de entrada quedaba vacía.
+                var grupos = new[]
+                {
+                    new { Id = (int)MenuEstatico.GESTION_COMPROMISO, Nombre = "Gestión de Compromisos", Icono = "fa fa-handshake" },
+                    new { Id = (int)MenuEstatico.GESTION_CONFIRMACION, Nombre = "Confirmaciones", Icono = "fa fa-tasks" }
+                };
+            }
+            @foreach (var grupo in grupos)
+            {
+                if (!Model.Any(x => x.Id == grupo.Id))
+                {
+                    continue;
+                }
+
+                var opciones = Model.Where(x => x.PadreId == grupo.Id).OrderBy(x => x.Orden).ToList();
+
+                <div class="col-md mt-1">
+                    <button type="button" class="btn btn-secondary btn-lg btn-block active grupo"
+                            aria-controls="grupo-@grupo.Id" aria-expanded="true">
+                        <i class="@grupo.Icono"></i>&nbsp; @grupo.Nombre
+                        <span class="badge badge-light ml-1">@opciones.Count</span>
+                        <i class="fas fa-angle-up float-right mt-1 indicador"></i>
+                    </button>
+                    <div class="row mt-1 opciones" id="grupo-@grupo.Id">
+                        @foreach (var item in opciones)
+                        {
+                            <div class="col-12 mt-1">
+                                <a href="@item.Url" class="btn btn-primary btn-lg btn-block text-left">
+                                    <i class="@item.Icono"></i>&nbsp; @item.Nombre
+                                </a>
+                            </div>
+                        }
+                        @if (opciones.Count == 0)
+                        {
+                            <div class="col-12 mt-1">
+                                <p class="text-muted text-center mb-0">No tiene opciones asignadas en este grupo.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            <div class="col-md mt-1">
+                <button type="button" class="btn btn-secondary btn-lg btn-block" disabled="disabled"
+                        title="Todavía no está disponible">
+                    Instructivos Estándar
+                    <span class="badge badge-light ml-1">Próximamente</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    @*<div class="col-md-6">
+        <div class="card card-default">
+            <div class="card-header">
+                <h4 class="text-center mb-0">
+                    <i class="fa fa-tools"></i>&nbsp;Confiabilidad de Equipos
+                </h4>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md mt-1">
+                <button class="btn btn-secondary btn-lg btn-block" disabled="disabled"><span class="fa fa-hard-hat"></span>&nbsp; Mantenimiento Autónomo</button>
+            </div>
+            <div class="col-md mt-1">
+                <button class="btn btn-secondary btn-lg btn-block" disabled="disabled"><span class="fa fa-copy"></span>&nbsp; Manuales y Catologos</button>
+            </div>
+        </div>
+
+    </div>*@
+</div>
+
+<script>
+    $(function () {
+        // Cada grupo se pliega por su cuenta. Antes eran dos manejadores calcados con
+        // el id del boton dentro, y abrir uno cerraba el otro sin poder volver a cerrarlo.
+        $('button.grupo').on('click', function () {
+            var boton = $(this);
+            var opciones = $('#' + boton.attr('aria-controls'));
+            var abierto = boton.attr('aria-expanded') === 'true';
+
+            opciones.attr('hidden', abierto ? 'hidden' : null);
+            boton.attr('aria-expanded', !abierto).toggleClass('active', !abierto);
+            boton.find('i.indicador')
+                 .toggleClass('fa-angle-up', !abierto)
+                 .toggleClass('fa-angle-down', abierto);
+        });
+    });
+</script>

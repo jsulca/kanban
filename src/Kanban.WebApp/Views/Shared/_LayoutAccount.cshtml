@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - SIRNPD</title>
+    <!-- Favicon -->
+    <link href="~/favicon.ico" rel="icon" type="image/vnd.microsoft.icon" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="~/plugins/fontawesome-free/css/all.min.css">
+    <!-- overlayScrollbars -->
+    <link rel="stylesheet" href="~/dist/css/adminlte.min.css">
+    <!-- Google Font: Source Sans Pro -->
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="~/plugins/jquery/jquery-3.6.0.min.js"></script>
+    <!-- Site -->
+    <link href="~/css/site.css" rel="stylesheet" />
+    <!-- Favicon -->
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+</head>
+<body class="login-page">
+    <div class="login-box">
+        <div class="card">
+            <div class="card-body">
+                <div class="login-logo">
+                    <div class="row">
+                        <div class="col text-left pb-2">
+                            <img src="~/images/logo-suma.png" alt="Logo SUMA" width="140" style="height: 40px !important;" />
+                        </div>
+                        <div class="col text-right pb-2">
+                            <img src="~/images/logo-ola.png" style="height: 40px !important;" />
+                        </div>
+                    </div>
+                </div>
+                @RenderBody()
+                <div class="login-logo pt-3">
+                    <img src="~/images/logo_barra_1.png" alt="Logos barra 1" height="60" />
+                    <img src="~/images/logo_barra_2.png" alt="Logos barra 2" height="60" />
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,172 @@
+﻿@model List<TableroResumen>
+@{
+    ViewBag.Title = "Mis tableros";
+}
+<link href="~/plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+<style>
+    .badge {
+        font-size: 100%;
+    }
+</style>
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="far  fa-calendar-alt"></i>&nbsp;Mis Tableros
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-footer text-right bg-white">
+                <div id="mensajes"></div>
+                <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model != null)
+    {
+        foreach (var item in Model)
+        {
+            <div class="col-md-4 col-sm-6">
+                <div class="card card-widget widget-user-2">
+
+                    <div class="card-header bg-info">
+                        <h3 class="card-title"><i class="far fa-calendar-alt"></i>&nbsp;@item.Nombre</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <span class="nav-link">
+                                    NUEVO
+                                    <span class="float-right badge bg-light">@item.Nuevo</span>
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <span class="nav-link">
+                                    PENDIENTE
+                                    <span class="float-right badge bg-pink">@item.Pendiente</span>
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <span class="nav-link">
+                                    FUERA DE FECHA
+                                    <span class="float-right badge bg-danger">@item.FueraFecha</span>
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <span class="nav-link">
+                                    POR VERIFICAR
+                                    <span class="float-right badge bg-warning">@item.PorVerificar</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="/Compromiso/Gestion/@item.EstructuraId" class="btn btn-warning"><i class="fa fa-calendar-alt"></i>&nbsp; Gestionar</a>
+                        <a href="javascript:tablero.Exportar(@item.EstructuraId)" class="btn btn-success"><span class="fa fa-file-excel"></span>&nbsp; Exportar</a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">EXPORTAR COMPROMISO</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Desde:</label>
+                            <div class="input-group">
+                                <input class="form-control form-control-sm datepicker" id="Desde" autocomplete="off" value="01/01/@DateTime.Today.Year" />
+                                <div class="input-group-append">
+                                    <div class="input-group-text">
+                                        <span class="fa fa-calendar"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Hasta:</label>
+                            <div class="input-group">
+                                <input class="form-control form-control-sm datepicker" id="Hasta" autocomplete="off" value="@DateTime.Today.ToString("dd/MM/yyyy")" />
+                                <div class="input-group-append">
+                                    <div class="input-group-text">
+                                        <span class="fa fa-calendar"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnExportar"><i class="fa fa-search"></i>&nbsp; Buscar</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp; Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<iframe name="frmDescarga" id="frmDescarga" hidden="hidden"></iframe>
+<script src="~/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+<script src="~/plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js"></script>
+<script>
+    var id;
+
+    var tablero = {
+        Exportar: function (tableroId) {
+            id = tableroId;
+            $('#modal-ventana').modal('show');
+        }
+    };
+    $(function () {
+
+        $('.datepicker').datepicker({
+            format: 'dd/mm/yyyy',
+            language: 'es',
+            autoclose: true
+        });
+
+        $('#btnExportar').click(function () {
+            if ($("#Desde").val() && $("#Hasta").val()) {
+
+                $('#modal-ventana').modal('hide');
+                var form = document.createElement('form');
+                var model = {
+                    'model.TableroId': id,
+                    'model.Desde': $("#Desde").val(),
+                    'model.Hasta': $("#Hasta").val()
+                };
+                form.method = 'POST';
+                form.action = '/Compromiso/ExportarExcel';
+                form.target = 'frmDescarga';
+                form.hidden = true;
+                form.classList.add('hidden');
+
+                var input;
+                Object.keys(model).forEach(function (key) {
+                    input = document.createElement("input");
+                    input.name = key;
+                    input.value = model[key];
+                    form.appendChild(input);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+
+    });
+</script>

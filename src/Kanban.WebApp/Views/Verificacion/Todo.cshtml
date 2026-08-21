@@ -1,0 +1,184 @@
+﻿@{
+    ViewBag.Title = "Todas las confirmaciones";
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="fas fa-user-check"></i>&nbsp;Todas las confirmaciones
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-body bg-light">
+                <div class="form-row" id="Filtros">
+                    <div class="col-md-2 col-sm-4">
+                        <label>Tablero:</label>
+                        <input class="form-control form-control-sm" id="FTablero" placeholder="Ingrese el tablero" />
+                    </div>
+                    <div class="col-md-2 col-sm-4">
+                        <label>Célula:</label>
+                        <input class="form-control form-control-sm" id="FEstructura" placeholder="Ingrese la célula" />
+                    </div>
+                    <div class="col-md-2 col-sm-4">
+                        <label>Tipo de confirmación:</label>
+                        <input class="form-control form-control-sm" id="FTipoConfirmacion" placeholder="Ingrese el tipo de confirmación" />
+                    </div>
+                    <div class="col-md-2">
+                        <label>Observado:</label>
+                        <input class="form-control form-control-sm" id="FObservado" placeholder="Ingrese el observado" />
+                    </div>
+                    <div class="col">
+                        <label>Fecha desde:</label>
+                        <input class="form-control form-control-sm datepicker" id="FFechaDesde" placeholder="Ingrese la fecha desde" />
+                    </div>
+                    <div class="col">
+                        <label>Fecha hasta:</label>
+                        <input class="form-control form-control-sm datepicker" id="FFechaHasta" placeholder="Ingrese la fecha hasta" />
+                    </div>
+                    <div class="col">
+                        <label>Es VP:</label>
+                        <select id="FVP" class="form-control form-control-sm">
+                            <option value="">TODOS</option>
+                            <option value="true">SI</option>
+                            <option value="false">NO</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-right bg-white">
+                <div id="mensajes"></div>
+                <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card card-info">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="tblIndex"
+                           class="table table-nowrap table-sm table-bordered table-hover"
+                           data-function="index.Listar"
+                           data-pageindex="1"
+                           data-totalrows="0"
+                           data-pagesize="20"
+                           data-paginator="#paginator">
+                        <thead>
+                            <tr class="bg-success text-center">
+                                <th width="40"></th>
+                                <th width="20">#</th>
+                                <th width="200">Tablero</th>
+                                <th width="200">Célula</th>
+                                <th>Nombre</th>
+                                <th width="200">Observador</th>
+                                <th width="200">Observado</th>
+                                <th width="150">Fecha Registro</th>
+                                <th width="150">Puntaje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-end" id="paginator"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var index = {
+        Listar: function (page) {
+            var table = $("#tblIndex");
+            var model = {
+                'pageIndex': page,
+                'pageSize': table.data('pagesize'),
+                'filter.EstructuraDescripcion': $('#FEstructura').val(),
+                'filter.TableroDescripcion': $('#FTablero').val(),
+                'filter.VerificacionNombre': $('#FTipoConfirmacion').val(),
+                'filter.Encargado': $('#FObservado').val(),
+                'filter.VP': $('#FVP').val(),
+            };
+            $.ajax({
+                url: "/Verificacion/ListarVerificarPorPagina",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) { },
+                complete: function () { },
+                success: function (data) {
+                    table.data('pageindex', page);
+                    table.data('totalrows', data.totalRows);
+                    index.GenerarTabla(table, data.lista);
+                    if (data.totalRows == 0) table.append(`<tr><td class="text-center" colspan="7">No se encontraron registros.</td></tr>`);
+                },
+                error: function () {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            var rows = '';
+            var numero = (table.data('pagesize') * table.data('pageindex')) - table.data('pagesize');
+            $.each(lista, function (i, r) {
+                rows += `<tr>
+                            <td class="text-center"><a class="option ver text-info" data-id="${r.Id}"><i class="fa fa-eye"></i></a></td>
+                            <td class="text-right">${++numero}</td>
+                            <td>${r.Tablero.Descripcion}</td>
+                            <td>${r.Estructura.Descripcion}</td>
+                            <td>${r.Verificacion.Nombre}</td>
+                            <td>${r.Empleado.Nombre} ${r.Empleado.ApellidoPaterno}</td>
+                            <td>${r.Encargado}</td>
+                            <td class="text-center">${r.FechaRegistro}</td>
+                            <td class="text-center">${r.PuntajeObtenido} / ${r.PuntajeMaximo}</td>
+                        </tr>`;
+
+            });
+            helper.pagination.update(table);
+            tbody.append(rows);
+        },
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                }
+            });
+        },
+    };
+
+    $(function () {
+        $('#Filtros input').keypress(function (e) {
+            var key = e.keyCode || event.keyCode;
+            if (key == 13) index.Listar(1);
+        });
+        $('#Filtros select').change(function (e) { index.Listar(1); });
+
+        $('#tblIndex tbody').delegate('a.ver', 'click', function (){
+            var id = $(this).data('id');
+            location.href = '/Verificacion/Ver/' + id;
+        });
+        index.Listar(1);
+    });
+
+    var SetVerificacion = function (item) {
+        $('#modal-ventana').modal('hide');
+        if (item) location.href = '/Verificacion/Verificar/' + item.Id;
+    }
+</script>
+
+

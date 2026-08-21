@@ -1,0 +1,125 @@
+﻿@model Empleado
+@{ 
+    List<Cargo> cargos = ViewBag.Cargos;
+    List<Area> areas = ViewBag.Areas;
+}
+<div class="modal-dialog modal-lg animated bounceInDown">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Nuevo Empleado</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="AreaId">Area: </label>
+                        @Html.DropDownListFor(m => m.AreaId, new SelectList(areas, "Id", "Descripcion"), "NINGUNO", new { @class= "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="CargoId">Cargo: </label>
+                        @Html.DropDownListFor(m => m.CargoId, new SelectList(cargos, "Id", "Descripcion"), "NINGUNO", new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="ApellidoPaterno">Apellido Paterno: <span class="text-danger">(*)</span></label>
+                        @Html.TextBoxFor(m => m.ApellidoPaterno, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="ApellidoMaterno">Apellido Materno: <span class="text-danger">(*)</span></label>
+                        @Html.TextBoxFor(m => m.ApellidoMaterno, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="Nombre">Nombres: <span class="text-danger">(*)</span></label>
+                        @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="NroDocumento">Nro. Documento: <span class="text-danger">(*)</span></label>
+                        @Html.TextBoxFor(m => m.NroDocumento, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="Telefono">Telefono: </label>
+                        @Html.TextBoxFor(m => m.Telefono, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="Correo">Correo: </label>
+                        @Html.TextBoxFor(m => m.Correo, new { @class = "form-control form-control-sm text-uppercase" })
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="msgEditar"></div>
+        <div class="modal-footer">
+            <button id="btnGuardar" type="button" class="btn btn-sm btn-primary"><i class="fa fa-check"></i>&nbsp; Guardar</button>
+            <a href="javascript:void(0)" class="btn btn-sm btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp; Cancelar</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    var nuevo = {
+        ObtenerModelo: function () {
+            var model = {
+                'cargoid': $('#CargoId').val(),
+                'areaid': $('#AreaId').val(),
+                'nombre': $('#Nombre').val(),
+                'apellidopaterno': $('#ApellidoPaterno').val(),
+                'apellidomaterno': $('#ApellidoMaterno').val(),
+                'nrodocumento': $('#NroDocumento').val(),
+                'correo': $('#Correo').val(),
+                'telefono': $('#Telefono').val(),
+            };
+            return model;
+        }
+    };
+    $(function () {
+        $('#btnGuardar').click(function () {
+            var model = nuevo.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Empleado/Nuevo",
+                data: model,
+                beforeSend: function () {
+                    $("#msgEditar").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    model['id'] = result;
+                    @string.Format("{0}(model);", ViewBag.CallBack)
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    //helper.errorShow('#msgEditar', result.responseText);
+                    $("#msgEditar").slideDown();
+                    $('#btnGuardar').removeAttr("disabled");
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgEditar', data);
+                    })
+                }
+            });
+        });
+    });
+</script>

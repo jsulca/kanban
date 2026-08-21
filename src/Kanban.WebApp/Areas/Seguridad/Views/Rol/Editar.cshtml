@@ -1,0 +1,209 @@
+﻿@model Rol
+@{
+    ViewBag.Title = "Seguridad - Editar Rol";
+    List<Pagina> paginas = ViewBag.Paginas;
+    bool paginaIsCheck = false, controlIsCheck = false;
+}
+<link href="~/plugins/jstree/css/style.min.css" rel="stylesheet" />
+<div class="row">
+    <div class="col-md-12">
+
+        @using (Html.BeginForm("Editar", "Rol", null, FormMethod.Post, null, new { @id = "form-editar" }))
+        {
+            <div class="card card-danger-border">
+                <div class="card-header">
+                    <h6 class="card-title"><i class="fa fa-bookmark"></i>&nbsp; EDITAR ROL</h6>
+                    <img src="/images/logo-ola-sm.png" class="float-right" style="height: 25px;">
+                    <img src="/images/logo-suma-sm.png" class="float-right" style="height: 25px; width: 90px;">
+                </div>
+                <div class="card-body">
+                    <div id="Error"></div>
+                    <div id="RolMenu"></div>
+                    <div id="RolPagina"></div>
+                    <div id="RolControl"></div>
+                    <div class="form-row">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Nombre: <span class="text-danger">(*)</span></label>
+                                @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control form-control-sm" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <label>Activo: </label>
+                                @Html.CheckBoxFor(m => m.Activo)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-primary" title="Guardar" id="btnGuardar"><i class="fa fa-save"></i>&nbsp;Guardar</button>
+                        <a role="button" class="btn btn-warning" title="Regresar" href="/Seguridad/Rol/Index"><i class="fa fa-chevron-left"></i>&nbsp;Regresar</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-dark card-tabs">
+                <div class="card-header p-0 pt-1">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="pill" href="#tab1" role="tab" aria-selected="false">MENUS</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="pill" href="#tab2" role="tab">PAGINAS Y CONTROLES</a></li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <div class="tab-pane fade active show" id="tab1" role="tabpanel">
+                            <div id="TreeMenu"></div>
+                        </div>
+                        <div class="tab-pane fade" id="tab2" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="tblPageControl">
+                                    <tbody>
+                                        @foreach (var pagina in paginas.OrderBy(x => x.Area).ThenBy(x => x.Controlador))
+                                        {
+                                            paginaIsCheck = Model.Paginas != null ? Model.Paginas.Count(x => x.PaginaId == pagina.Id) > 0 : false;
+                                            <tr>
+                                                <td>
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" id="pagina@(pagina.Id)" class="custom-control-input Pagina" value="@pagina.Id" @(paginaIsCheck ? "checked" : "") />
+                                                        <label class="custom-control-label" for="pagina@(pagina.Id)">@(pagina.Area != null ? "/" + pagina.Area : "")/@pagina.Controlador/@pagina.Accion - @pagina.Nombre</label>
+                                                    </div>
+                                                </td>
+                                                <td width="300" class="pa-10">
+                                                    @if (pagina.Controles != null)
+                                                    {
+                                                        foreach (var control in pagina.Controles)
+                                                        {
+                                                            controlIsCheck = Model.Controles != null ? Model.Controles.Count(x => x.ControlId == control.Id) > 0 : false;
+                                                            <div class="custom-control custom-checkbox">
+                                                                <input type="checkbox" id="control@(control.Id)" class="custom-control-input Control" value="@control.Id" @(controlIsCheck ? "checked" : "") @(paginaIsCheck ? "" : "disabled") />
+                                                                <label class="custom-control-label" for="control@(control.Id)"> @control.Nombre </label>
+                                                            </div>
+                                                        }
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+<script src="~/plugins/jstree/js/jstree.min.js"></script>
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+    var treeMenu = @(Html.Raw(ViewBag.MenuJson ?? "[]")),
+        rolMenu = @(Html.Raw(ViewBag.RolMenu != null ? ViewBag.RolMenu : "[]"));
+
+    var editar = {
+        ObtenerModelo: function () {
+            var model = {
+                id: @Model.Id,
+                nombre: $('#Nombre').val(),
+                activo: $('#Activo').val(),
+                controles: [],
+                menus: [],
+                paginas: []
+            };
+
+            $.each($('input.Pagina:checked'), function (i, check) {
+                model.paginas.push({
+                    paginaId: check.value
+                });
+            });
+
+            $.each($('input.Control:checked'), function (i, check) {
+                model.controles.push({
+                    controlId: check.value
+                });
+            });
+
+            $.each($("#TreeMenu").jstree("get_checked", null, true), function (i, r) {
+                var node = $("#TreeMenu").jstree().get_node(r);
+                if (node.id != "0") model.menus.push({ menuId: node.id });
+            });
+
+            $("#TreeMenu").find(".jstree-undetermined").each(function (i, r) {
+                var node = $("#TreeMenu").jstree().get_node(r);
+                if (node.id != "0") model.menus.push({ menuId: node.id });
+            });
+
+            return model;
+        }
+    };
+    $(function () {
+        $('#TreeMenu').jstree({
+            plugins: ["wholerow", "checkbox"],
+            checkbox: { "keep_selected_style": false },
+            search: { show_only_matches: true },
+            core: {
+                check_callback: true,
+                data: treeMenu,
+                animation: '1',
+                themes: {
+                    name: 'proton',
+                    responsive: true
+                }
+            }
+        }).bind("dblclick.jstree", function (event, e) {
+            var node = $("#Tree").jstree().get_node($(event.target).closest("li"));
+            if (node.children.length > 0) {
+                if (node.state.opened) $("#Tree").jstree("close_node", node);
+                else $("#Tree").jstree("open_node", node);
+            }
+        }).bind('ready.jstree', function (e, data) {
+            $.each(rolMenu, function (r, m) {
+                var node = data.instance.get_node(m.MenuId);
+                if (node.children.length == 0) $("#TreeMenu").jstree(false).check_node(node.id);
+            });
+        });
+
+        $('input.Pagina').change(function () {
+            var tr = $(this).parents('tr');
+            var checks = $(tr).find('input.Control');
+            if ($(this).prop('checked')) checks.removeAttr('disabled');
+            else {
+                checks.prop('checked', false);
+                checks.prop('disabled', 'disabled');
+            }
+        });
+
+        $('#btnGuardar').click(function () {
+            var model = editar.ObtenerModelo();
+            Swal.fire({
+                title: 'Estas seguro de actualizar el rol?',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Si',
+                cancelButtonText: 'No'
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/Seguridad/Rol/Editar",
+                        data: model,
+                        beforeSend: function () { },
+                        complete: function () { },
+                        success: function (result) {
+                            Swal.fire('Actualizado!', "El rol fue actualizado", 'success').then(() => {
+                                location.href = '/Seguridad/Rol/Index';
+                            });
+                        },
+                        error: function (result) {
+                            helper.errorShow('#Error', result.responseText);
+                        }
+                    });
+                }
+            });
+        });
+    });
+
+</script>

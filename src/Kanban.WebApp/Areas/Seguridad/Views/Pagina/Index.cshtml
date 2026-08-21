@@ -1,0 +1,180 @@
+﻿@{
+    ViewBag.Title = "Seguridad - Lista de Paginas";
+}
+<style>
+    table {
+        white-space: nowrap;
+    }
+</style>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-danger-border">
+            <div class="card-header">
+                <h6 class="card-title"><i class="fa fa-file-alt"></i>&nbsp; PAGINAS</h6>
+                <img src="/images/logo-ola-sm.png" class="float-right" style="height: 25px;">
+                <img src="/images/logo-suma-sm.png" class="float-right" style="height: 25px; width: 90px;">
+            </div>
+            <div class="card-body">
+                <div class="text-right">
+                    <button type="button" class="btn btn-sm btn-primary" title="Nuevo" id="btnNuevo"><i class="fa fa-plus"></i>&nbsp;Nuevo</button>
+                </div>
+                <br />
+                <div id="Error"></div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered table-hover table-vertical-align"
+                           id="tblIndex"
+                           data-function="index.Listar"
+                           data-pageindex="1"
+                           data-totalrows="0"
+                           data-pagesize="20"
+                           data-paginator="paginator">
+                        <thead>
+                            <tr>
+                                <td colspan="2"></td>
+                                <td><input class="form-control form-control-sm" id="Nombre" autocomplete="off" /></td>
+                                <td><input class="form-control form-control-sm" id="Area" autocomplete="off" /></td>
+                                <td><input class="form-control form-control-sm" id="Controlador" autocomplete="off" /></td>
+                                <td><input class="form-control form-control-sm" id="Accion" autocomplete="off" /></td>
+                            </tr>
+                            <tr class="bg-info">
+                                <th width="20"></th>
+                                <th width="20">#</th>
+                                <th width="10" class="sort" data-order="nombre">Nombre</th>
+                                <th width="10" class="sort" data-order="area">Area</th>
+                                <th width="10" class="sort" data-order="controlador">Controlador</th>
+                                <th width="10" class="sort" data-order="accion">Accion</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="text-right" id="paginator"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+
+<script>
+    var index = {
+        Listar: function (page) {
+            var table = $("#tblIndex");
+            var model = {
+                'pageIndex': page,
+                'pageSize': table.data('pagesize'),
+                'orderBy': table.data('order'),
+                'sort': table.data('sort'),
+                'filter.Nombre': $("#Nombre").val(),
+                'filter.Area': $("#Area").val(),
+                'filter.Controlador': $("#Controlador").val(),
+                'filter.Accion': $("#Accion").val(),
+            };
+            $.ajax({
+                url: "/Seguridad/Pagina/ListarPorPagina",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    $('.refresh-container').attr('style', 'display: block');
+                },
+                complete: function () {
+                    $('.refresh-container').removeAttr('style');
+                },
+                success: function (data) {
+                    table.data('pageindex', page);
+                    table.data('totalrows', data.totalRows);
+                    index.GenerarTabla(table, data.lista);
+                    if (data.totalRows == 0) table.children('tbody').append("<tr><td colspan='6' class='text-center'>No existen registros</td></td>");
+                },
+                error: function (data) {
+                    helper.errorShow('#Error', data.responseText)
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            var rows = '';
+            var numero = (table.data('pagesize') * table.data('pageindex')) - table.data('pagesize');
+            $.each(lista, function (i, r) {
+                rows += '<tr>';
+                rows += '<td class="text-center"><ul class="list-inline" style="margin: 0; padding: 0;">';
+                rows += `<li><span class="option text-warning editar" data-id="${r.Id}"><i class="fas fa-pencil-alt"></i></span></li>`;
+                rows += '</ul></td>';
+                rows += `<td class="text-right">${++numero}</td>`;
+                rows += `<td>${r.Nombre}</td>`;
+                rows += `<td>${r.Area}</td>`;
+                rows += `<td>${r.Controlador}</td>`;
+                rows += `<td>${r.Accion}</td>`;
+                rows += '</tr>';
+            });
+            helper.pagination.update(table);
+            tbody.append(rows);
+        },
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal({ backdrop: "static" });
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                    helper.errorShow('#Error', result.responseText);
+                }
+            });
+        }
+    };
+    $(function () {
+        $("#tblIndex").delegate('th.sort', 'click', function () {
+            let order = $('#tblIndex').data('order'),
+                newOrder = $(this).data('order'),
+                sort = $('#tblIndex').data('sort');
+            $('#tblIndex th.sort span').remove();
+            if (order == newOrder) {
+                if (sort == 'asc') {
+                    $(this).append('<span class="fa fa-chevron-up"></span>');
+                    $('#tblIndex').data('sort', 'desc');
+                } else {
+                    $(this).append('<span class="fa fa-chevron-down"></span>');
+                    $('#tblIndex').data('sort', 'asc');
+                }
+            } else {
+                $(this).append('<span class="fa fa-chevron-down">   </span>');
+                $('#tblIndex').data('sort', 'asc');
+            }
+            $('#tblIndex').data('order', newOrder);
+            index.Listar(1);
+        });
+        $("#tblIndex input").keypress(function (e) {
+            var keyCode = e.keyCode || event.keyCode;
+            if (keyCode === 13) index.Listar(1);
+        });
+
+        $('#btnNuevo').click(function () {
+            index.AbrirModal('/Seguridad/Pagina/Nuevo', { });
+        });
+
+        $("#tblIndex tbody").delegate('span.editar', 'click', function () {
+            var id = $(this).data('id');
+            index.AbrirModal('/Seguridad/Pagina/Editar', { id });
+        });
+
+        index.Listar(1);
+    });
+
+    var SetNuevoPagina = SetEditarPagina = function () {
+        $('#modal-ventana').modal('hide');
+        index.Listar($('#tblIndex').data('pageindex'));
+    }
+
+</script>

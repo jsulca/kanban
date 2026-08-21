@@ -1,0 +1,1208 @@
+﻿@model Estructura
+@{
+    ViewBag.Title = Model.Descripcion;
+    List<Compromiso> compromisos = ViewBag.Compromisos;
+    int cantidadFueraFecha = compromisos.Count(x => !x.InstanciaId.HasValue && x.Estado == EstadoCompromiso.FUERA_DE_FECHA);
+}
+
+<link rel="stylesheet" href="~/plugins/fullcalendar/main.min.css" />
+<link rel="stylesheet" href="~/plugins/fullcalendar-daygrid/main.min.css">
+<link rel="stylesheet" href="~/plugins/fullcalendar-timegrid/main.min.css">
+<link rel="stylesheet" href="~/plugins/fullcalendar-bootstrap/main.min.css">
+<style>
+    .compromiso {
+        margin-bottom: 1px;
+        cursor: move;
+        box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+        border-radius: .25rem;
+        padding: 5px 10px;
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+        }
+
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+        }
+
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+        }
+    }
+
+    .card-wait {
+        text-align: center;
+        background-color: rgba(0, 0, 0, .3);
+        border-radius: .25rem;
+    }
+
+    .swal2-content {
+        text-align: left;
+    }
+    
+    .fc-header-toolbar{
+        text-transform: uppercase;
+    }
+
+    .list-compromisos {
+        max-height: 166px;
+        overflow-y: auto;
+        /* Deja sitio para soltar aunque la columna no tenga tarjetas. */
+        min-height: 72px;
+    }
+
+    /* Columna vacía a la que SÍ se pueden mover tarjetas. */
+    .list-compromisos.sin-compromisos {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed rgba(0, 0, 0, .15);
+        border-radius: .25rem;
+    }
+
+    .list-compromisos.sin-compromisos::after {
+        content: "Suelta una tarjeta aquí";
+        font-size: .75rem;
+        text-transform: uppercase;
+        color: rgba(0, 0, 0, .35);
+    }
+
+    /* Columna vacía que no admite tarjetas (NUEVO). */
+    .list-compromisos.vacia {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .list-compromisos.vacia::after {
+        content: "Sin compromisos";
+        font-size: .75rem;
+        text-transform: uppercase;
+        color: rgba(0, 0, 0, .25);
+    }
+    /*.list-compromisos{
+        height: 150px;
+    }*/
+</style>
+<div class="row">
+    <div class="col-md-10">
+        <div class="card card-default">
+            <div class="card-header bg-danger">
+                <h3 class="card-title font-weight-bold">
+                    <i class="fa fa-calendar-alt"></i>&nbsp;
+                    Gestión de compromisos - @Model.Descripcion
+                </h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md text-center">
+        <div class="form-row">
+            <div class="col">
+                <img src="/images/logo-ola.png" style="height: 35px !important;">
+            </div>
+            <div class="col-6">
+                <img src="/images/logo-suma.png" class="img-responsive" style="height: 35px !important;" />
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md">
+        <div class="row">
+            <div class="col-md-12 col-sm-6">
+                <div class="card card-default" data-tipo="ESTADO" data-estado="@EstadoCompromiso.NUEVO">
+                    <div class="card-header option text-dark nuevo">
+                        <h3 class="card-title">NUEVO</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-1 list-compromisos">
+                        @foreach (var item in compromisos.Where(x => x.Estado == EstadoCompromiso.NUEVO && !x.InstanciaId.HasValue))
+                        {
+                            <div class="compromiso" data-codigo="@item.Codigo" data-id="@item.Id" draggable="true" data-estado="@item.Estado" data-instanciaid="@item.InstanciaId">
+                                <p class="mb-0">
+                                    @if (item.AreaId.HasValue)
+                                    {
+                                        <i class="fa fa-circle mr-1 text-@item.Area.ColorFondo.Clase"></i>
+                                    }
+                                    @item.Descripcion
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12 col-sm-6">
+                <div class="card card-default" data-tipo="ESTADO" data-estado="@EstadoCompromiso.PENDIENTE">
+                    <div class="card-header bg-pink dropzone">
+                        <h3 class="card-title text-white ">PENDIENTES</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-1 list-compromisos">
+                        @foreach (var item in compromisos.Where(x => x.Estado == EstadoCompromiso.PENDIENTE && !x.InstanciaId.HasValue))
+                        {
+                            <div class="compromiso" data-codigo="@item.Codigo" data-id="@item.Id" draggable="true" data-estado="@item.Estado" data-instanciaid="@item.InstanciaId">
+                                <p class="mb-0">
+                                    @if (item.AreaId.HasValue)
+                                    {
+                                        <i class="fa fa-circle mr-1 text-@item.Area.ColorFondo.Clase"></i>
+                                    }
+                                    @item.Descripcion
+                                </p>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-md-12 col-sm-6">
+                <div class="card card-default" data-tipo="ESTADO" data-estado="@EstadoCompromiso.POR_VERIFICAR">
+                    <div class="card-header bg-warning dropzone">
+                        <h3 class="card-title text-dark">POR VERIFICAR</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-1 list-compromisos">
+                        @foreach (var item in compromisos.Where(x => x.Estado == EstadoCompromiso.POR_VERIFICAR && !x.InstanciaId.HasValue))
+                        {
+                            <div class="compromiso" data-codigo="@item.Codigo" data-id="@item.Id" draggable="true" data-estado="@item.Estado" data-instanciaid="@item.InstanciaId">
+                                <p class="mb-0">
+                                    @if (item.AreaId.HasValue)
+                                    {
+                                        <i class="fa fa-circle mr-1 text-@item.Area.ColorFondo.Clase"></i>
+                                    }
+                                    @item.Descripcion
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card card-default">
+            <div id="calendar"></div>
+        </div>
+    </div>
+    <div class="col-sm">
+        <div class="row">
+            <div class="col-md-12 col-sm-6">
+                <div class="card card-default" data-tipo="ESTADO" data-estado="@EstadoCompromiso.FUERA_DE_FECHA">
+                    <div class="card-header bg-danger">
+                        <h3 class="card-title text-white">FUERA DE FECHA</h3>
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-1 list-compromisos">
+                        @foreach (var item in compromisos.Where(x => x.Estado == EstadoCompromiso.FUERA_DE_FECHA && !x.InstanciaId.HasValue))
+                        {
+                            <div class="compromiso" data-codigo="@item.Codigo" data-id="@item.Id" draggable="true" data-estado="@item.Estado" data-instanciaid="@item.InstanciaId">
+                                <p class="mb-0">
+                                    @if (item.AreaId.HasValue)
+                                    {
+                                        <i class="fa fa-circle mr-1 text-@item.Area.ColorFondo.Clase"></i>
+                                    }
+                                    @item.Descripcion
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            @foreach (var item in Model.Instancias.OrderBy(x => x.InstanciaId))
+            {
+
+                <div class="col-md-12 col-sm-6">
+                    <div class="card card-default" data-tipo="INSTANCIA" data-instanciaid="@item.InstanciaId">
+                        <div class="card-header bg-@item.Instancia.ColorFondo.Clase dropzone">
+                            <h3 class="card-title text-white">@item.Instancia.Abreviatura</h3>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body p-1 list-compromisos">
+                            @foreach (var item2 in compromisos.Where(x => x.InstanciaId == item.InstanciaId))
+                            {
+                                <div class="compromiso" data-codigo="@item2.Codigo" data-id="@item2.Id" draggable="true" data-estado="@item2.Estado" data-instanciaid="@item2.InstanciaId">
+                                    <p class="mb-0">
+                                        @if (item2.AreaId.HasValue)
+                                        {
+                                            <i class="fa fa-circle mr-1 text-@item2.Area.ColorFondo.Clase"></i>
+                                        }
+                                        @item2.Descripcion
+                                    </p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+
+<script src="~/plugins/jquery-ui/jquery-ui.min.js"></script>
+
+<script src="~/plugins/fullcalendar/main.min.js"></script>
+<script src="~/plugins/fullcalendar-daygrid/main.min.js"></script>
+<script src="~/plugins/fullcalendar-timegrid/main.min.js"></script>
+<script src="~/plugins/fullcalendar-interaction/main.min.js"></script>
+<script src="~/plugins/fullcalendar-bootstrap/main.min.js"></script>
+
+<script src="~/plugins/fullcalendar/locales/es.js"></script>
+
+<script src="~/plugins/moment/moment.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+    var hoy = moment('@DateTime.Today.ToString("yyyy-MM-dd")', 'YYYY-MM-DD');
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'bottom',
+        showConfirmButton: false,
+        timer: 2500
+    });
+
+    // La zona de soltar estaba solo en la cabecera de cada columna, así que con la
+    // columna vacía no había dónde apuntar. Se añade también el cuerpo, y solo en las
+    // columnas que ya admitían soltar (NUEVO sigue sin admitir).
+    document.querySelectorAll('.card-header.dropzone').forEach(cabecera => {
+        var cuerpo = cabecera.parentElement.querySelector('.list-compromisos');
+        if (cuerpo) cuerpo.classList.add('dropzone');
+    });
+
+    const dropzones = document.querySelectorAll('.dropzone');
+
+    var compromiso;
+
+    var gestion = {
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                }
+            });
+        },
+        ValidarEstado: function (estadoCompromiso, estadoTarjeta, instanciaId) {
+            var ok = false;
+            var estadosProgramacion = ['@EstadoCompromiso.PROGRAMADO', '@EstadoCompromiso.REPROGRAMADO'];
+            if (estadosProgramacion.indexOf(estadoTarjeta) >= 0 && instanciaId) {
+                if (instanciaId) ok = true;
+            } else {
+                switch (estadoCompromiso) {
+                    case "@EstadoCompromiso.NUEVO":
+                        var estados = ['@EstadoCompromiso.PENDIENTE', '@EstadoCompromiso.PROGRAMADO'];
+                        if (estados.indexOf(estadoTarjeta) >= 0) ok = true;
+                        else Toast.fire({ type: 'error', title: 'No se puede realizar el cambio.' });
+                        break;
+                    case "@EstadoCompromiso.PENDIENTE":
+                        var estados = ['@EstadoCompromiso.PENDIENTE', '@EstadoCompromiso.PROGRAMADO'];
+                        if (estados.indexOf(estadoTarjeta) >= 0) ok = true;
+                        else Toast.fire({ type: 'error', title: 'No se puede realizar el cambio.' });
+                        break;
+                    case "@EstadoCompromiso.FUERA_DE_FECHA":
+                        var estados = ['@EstadoCompromiso.REPROGRAMADO'];
+                        if (estados.indexOf(estadoTarjeta) >= 0) ok = true;
+                        else Toast.fire({ type: 'error', title: 'No se puede realizar el cambio.' });
+                        break;
+                    case "@EstadoCompromiso.PROGRAMADO":
+                    case "@EstadoCompromiso.REPROGRAMADO":
+                        break;
+                    case "@EstadoCompromiso.POR_VERIFICAR":
+                        var estados = ['@EstadoCompromiso.PENDIENTE'];
+                        if (estados.indexOf(estadoTarjeta) >= 0) ok = true;
+                        else Toast.fire({ type: 'error', title: 'No se puede realizar el cambio.' });
+                        break;
+                }
+            }
+
+            return ok;
+        },
+        ValidarInstancia: function (estadoCompromiso, instanciaCompromiso, instanciaTarjeta) {
+            var ok = false;
+            if (!instanciaCompromiso) {
+                switch (estadoCompromiso) {
+                    case "@EstadoCompromiso.NUEVO":
+                        var instancias = [@string.Join(",", Model.Instancias.Where(x => x.InstanciaId != 2).Select(x => x.InstanciaId).ToArray())];
+                        if (instancias.indexOf(instanciaTarjeta) >= 0) ok = true;
+                        else Toast.fire({ type: 'error', title: 'No se puede realizar el cambio.' });
+                        break;
+                    case "@EstadoCompromiso.PENDIENTE":
+                        var instancias = [@string.Join(",", Model.Instancias.Where(x => x.InstanciaId != 2).Select(x => x.InstanciaId).ToArray())];
+                        if (instancias.indexOf(instanciaTarjeta) >= 0) ok = true;
+                        else Toast.fire({ type: 'error', title: 'No se puede realizar el cambio.' });
+                        break;
+                    case "@EstadoCompromiso.FUERA_DE_FECHA":
+                        ok = true;
+                        break;
+                    case "@EstadoCompromiso.PROGRAMADO":
+                        break;
+                    case "@EstadoCompromiso.REPROGRAMADO":
+                        break;
+                    case "@EstadoCompromiso.POR_VERIFICAR":
+                        ok = true;
+                        break;
+                }
+            } else {
+                switch (instanciaCompromiso * 1) {
+                    //GERENCIA
+                    case @((int)InstanciaObligatoria.GERENCIA):
+                        @*if (instanciaTarjeta != @((int)InstanciaObligatoria.DIRECCION)) Toast.fire({ type: 'error', title: 'No se puede realizar el cambio.' });
+                        else ok = true;*@
+                            ok = true;
+                        break;
+                    //DIRECCION
+                    case @((int)InstanciaObligatoria.DIRECCION):
+                        //Toast.fire({ type: 'error', title: 'Un compromiso en @InstanciaObligatoria.DIRECCION no se puede escalar.' });
+                        ok = true;
+                        break;
+                    //OTROS
+                    default:
+                        if (instanciaTarjeta == @((int)InstanciaObligatoria.DIRECCION)) Toast.fire({ type: 'error', title: 'No se puede realizar el cambio.' });
+                        else ok = true;
+                        break;
+                }
+            }
+            return ok;
+        },
+        ActualizarEstado: function (compromisoId, estado, cardCompromiso, cardEstado, tablero, fecha, errorAccion) {
+            if (estado == '@EstadoCompromiso.PENDIENTE') {
+                if (cardCompromiso.data('estado') != '@EstadoCompromiso.NUEVO') {
+                    Swal.fire({
+                        input: 'textarea',
+                        inputPlaceholder: 'Ingrese el motivo',
+                        showCancelButton: true,
+                        confirmButtonText: 'Aceptar',
+                        cancelButtonText: 'Cancelar',
+                    }).then(x => {
+                        if (x.value) {
+                            $.ajax({
+                                type: "POST",
+                                url: "/Compromiso/CambiarEstado",
+                                data: {
+                                    'model.Id': compromisoId,
+                                    'model.Estado': estado,
+                                    'model.FechaProgramacion': fecha,
+                                    'model.FechaReprogramacion': fecha,
+                                    'model.Motivo': x.value,
+                                },
+                                beforeSend: function () { },
+                                complete: function () { },
+                                success: function (data) {
+
+                                    if (cardCompromiso) {
+                                        if (cardCompromiso[0].dataset.tipo == "ESTADO") gestion.ListarEstado(cardCompromiso[0].dataset.estado);
+                                        else gestion.ListarInstancia(cardCompromiso[0].dataset.instanciaid);
+                                    }
+
+                                    if (tablero) calendar.refetchEvents();
+                                    else gestion.ListarEstado(estado);
+
+                                    Swal.fire({
+                                        title: 'Perfecto!',
+                                        text: 'El compromiso fue ' + estado.replace('_', ' ')
+                                    });
+                                },
+                                error: function (data) {
+                                    var err = data.responseText;    
+                                    Swal.fire({
+                                        title: 'Ocurrió un problema!',
+                                        html: err
+                                    })
+                                }
+                            });
+                        } else Toast.fire({ type: 'error', title: 'Es necesario ingresar un motivo.' });
+                    });
+                } else {
+                    $.ajax({
+                        type: "POST",
+                        url: "/Compromiso/CambiarEstado",
+                        data: {
+                            'model.Id': compromisoId,
+                            'model.Estado': estado,
+                            'model.FechaProgramacion': fecha,
+                            'model.FechaReprogramacion': fecha
+                        },
+                        beforeSend: function () { },
+                        complete: function () { },
+                        success: function (data) {
+                            if (cardCompromiso) {
+                                if (cardCompromiso[0].dataset.tipo == "ESTADO") gestion.ListarEstado(cardCompromiso[0].dataset.estado);
+                                else gestion.ListarInstancia(cardCompromiso[0].dataset.instanciaid);
+                            }
+
+                            if (tablero) calendar.refetchEvents();
+                            else gestion.ListarEstado(estado);
+
+                            Swal.fire({
+                                title: 'Perfecto!',
+                                text: 'El compromiso paso a ' + estado.replace('_', ' ')
+                            });
+                        },
+                        error: function () {
+                            $.get('/ErrorHandler/GetError', {}, (data) => {
+                                var err = data;
+                                Swal.fire({
+                                    title: 'Ocurrió un problema!',
+                                    html: err
+                                })
+                            })
+                        }
+                    });
+                }
+            } else {
+                if (estado == '@EstadoCompromiso.PROGRAMADO') {
+                    Swal.fire({
+                        title: '¿Esta seguro de programar el compromiso?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Aceptar',
+                        cancelButtonText: 'Cancelar',
+                    }).then(x => {
+                        if (x.value) {
+                            $.ajax({
+                                type: "POST",
+                                url: "/Compromiso/CambiarEstado",
+                                data: {
+                                    'model.Id': compromisoId,
+                                    'model.Estado': estado,
+                                    'model.FechaProgramacion': fecha,
+                                    'model.FechaReprogramacion': fecha,
+                                },
+                                beforeSend: function () {
+                                    if (cardCompromiso) cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+                                    if (!tablero && cardEstado) cardEstado.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+                                },
+                                complete: function () {
+                                    if (cardCompromiso) cardCompromiso.find('div.card-wait').remove();
+                                    if (!tablero && cardEstado) cardEstado.find('div.card-wait').remove();
+                                },
+                                success: function (data) {
+
+                                    if (cardCompromiso) {
+                                        if (cardCompromiso[0].dataset.tipo == "ESTADO") gestion.ListarEstado(cardCompromiso[0].dataset.estado);
+                                        else gestion.ListarInstancia(cardCompromiso[0].dataset.instanciaid);
+                                    }
+
+                                    if (tablero) calendar.refetchEvents();
+                                    else gestion.ListarEstado(estado);
+
+                                    Swal.fire({
+                                        title: 'Perfecto!',
+                                        text: 'El compromiso fue ' + estado.replace('_', ' ')
+                                    });
+                                },
+                                error: function (data) {
+
+                                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                                        var err = data;
+                                        Swal.fire({
+                                            title: 'Ocurrió un problema!',
+                                            html: err
+                                        })
+                                    })
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    $.ajax({
+                        type: "POST",
+                        url: "/Compromiso/CambiarEstado",
+                        data: {
+                            'model.Id': compromisoId,
+                            'model.Estado': estado,
+                            'model.FechaProgramacion': fecha,
+                            'model.FechaReprogramacion': fecha
+                        },
+                        beforeSend: function () { },
+                        complete: function () { },
+                        success: function (data) {
+
+                            if (cardCompromiso) {
+                                if (cardCompromiso[0].dataset.tipo == "ESTADO") gestion.ListarEstado(cardCompromiso[0].dataset.estado);
+                                else gestion.ListarInstancia(cardCompromiso[0].dataset.instanciaid);
+                            }
+
+                            if (tablero) calendar.refetchEvents();
+                            else gestion.ListarEstado(estado);
+
+                            Swal.fire({
+                                title: 'Perfecto!',
+                                text: 'El compromiso paso a ' + estado.replace('_', ' ')
+                            });
+                        },
+                        error: function () {
+                            $.get('/ErrorHandler/GetError', {}, (data) => {
+                                var err = data;
+                                Swal.fire({
+                                    title: 'Ocurrió un problema!',
+                                    html: err
+                                })
+                                if (errorAccion) errorAccion();
+                            })
+
+                        }
+                    });
+                }
+            }
+        },
+        ActualizarInstancia: function (compromisoId, instanciaId, motivo, cardOrigen) {
+            $.ajax({
+                type: "POST",
+                url: "/Compromiso/CambiarInstancia",
+                data: { id: compromisoId, instanciaId, motivo },
+                beforeSend: function () {
+                    //Carga de cambio de instancia
+                },
+                complete: function () {
+                    //Carga de cambio de instancia
+                },
+                success: function (data) {
+                    if (cardOrigen[0].dataset.tipo == "ESTADO") gestion.ListarEstado(cardOrigen[0].dataset.estado);
+                    else gestion.ListarInstancia(cardOrigen[0].dataset.instanciaid);
+                    gestion.ListarInstancia(instanciaId);
+                },
+                error: function () {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        var err = data;
+                        Swal.fire({
+                            title: 'Ocurrió un problema!',
+                            html: err
+                        })
+                    })
+                }
+            });
+        },
+        ObtenerCompromisos: function (compromisos) {
+            var rows = '';
+            $.each(compromisos, function (i, item) {
+                rows += `<div class="compromiso" data-codigo="${item.Codigo}" data-id="${item.Id}" draggable="true" data-estado="${item.Estado}" data-instanciaid="${item.InstanciaId || ""}">
+                                <p class="mb-0">
+                                    ${item.AreaId ? `<i class="fa fa-circle mr-1 text-${item.Area.ColorFondo.Clase}"></i>`: ""}
+                                    ${item.Descripcion}
+                                 </p>
+                            </div>`;
+            });
+            return rows;
+        },
+        ObtenerCompromisosTablero: function (compromisos) {
+            var lista = [];
+            $.each(compromisos, function (i, item) {
+                lista.push({
+                    id: item.Id,
+                    title: `${item.Estado == '@EstadoCompromiso.REPROGRAMADO' ? "[R] - " : ""}${item.Descripcion}`,
+                    start: `${item.Estado == '@EstadoCompromiso.PROGRAMADO' ? item.FechaProgramacion : item.FechaReprogramacion}`,
+                    description: item.Descripcion,
+                    icon: 'fa fa-circle text-' + item.Area.ColorFondo.Clase,
+                    backgroundColor: '#FFFFFF',
+                    borderColor: '#808080',
+                    textColor: '#808080',
+                    estado: item.Estado
+                });
+            });
+            return lista;
+        },
+        ActualizarCalendario: function (fetchInfo, successCallback, failureCallback) {
+            $.ajax({
+                type: "POST",
+                url: "/Compromiso/Listar",
+                data: {
+                    'filtro.TableroId': @Model.Id,
+                    'filtro.InstanciaId': 0,
+                    'filtro.Estados[0]': '@((int)EstadoCompromiso.PROGRAMADO)',
+                    'filtro.Estados[1]': '@((int)EstadoCompromiso.REPROGRAMADO)',
+                },
+                beforeSend: function () { },
+                complete: function () { },
+                success: function (data) {
+                    var tarjetas = gestion.ObtenerCompromisosTablero(data);
+                    successCallback(tarjetas);
+                },
+                error: function () {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        var err = data;
+                        Swal.fire({
+                            title: 'Ocurrió un problema!',
+                            html: err
+                        })
+                        failureCallback(data);
+                    })
+                }
+            });
+        },
+        MarcarColumnasVacias: function () {
+            $('div.card[data-tipo] .list-compromisos').each(function () {
+                var vacia = $(this).children('div.compromiso').length === 0;
+                var admiteSoltar = $(this).hasClass('dropzone');
+                $(this).toggleClass('sin-compromisos', vacia && admiteSoltar);
+                $(this).toggleClass('vacia', vacia && !admiteSoltar);
+            });
+        },
+        EventoDrag: function () {
+            gestion.MarcarColumnasVacias();
+            var compromisos = document.querySelectorAll('.compromiso');
+            compromisos.forEach(c => {
+                c.addEventListener("dragstart", function (event) {
+                    compromiso = event.target;
+                    event.target.style.opacity = .5;
+                }, false);
+                c.addEventListener("dragend", function (event) {
+                    event.target.style.opacity = 1;
+                }, false);
+                c.addEventListener("dragover", (event) => {
+                    event.preventDefault();
+                });
+                c.addEventListener("dblclick", (event) => {
+                    gestion.AbrirModal('/Compromiso/Asignar', { id: c.dataset.id, callBack: 'SetAsignar' });
+                });
+            });
+        },
+        EventoDraEvent: function () { },
+        ListarEstado: function (estado) {
+            var cardCompromiso = $('div.card[data-tipo="ESTADO"][data-estado="' + estado + '"]');
+            var model = { tableroId: @Model.Id, estado};
+            $.ajax({
+                type: "POST",
+                url: "/Compromiso/ListarPorEstado",
+                data: model,
+                beforeSend: function () {
+                    cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+                },
+                complete: function () {
+                    cardCompromiso.find('div.card-wait').remove();
+                },
+                success: function (data) {
+                    cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                    cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+                    gestion.EventoDrag();
+                },
+                error: function () {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        var err = data;
+                        Swal.fire({
+                            title: 'Ocurrió un problema!',
+                            html: err
+                        })
+                    })
+                }
+            });
+        },
+        ListarInstancia: function (instanciaId) {
+            var cardCompromiso = $('div.card[data-tipo="INSTANCIA"][data-instanciaid="' + instanciaId + '"]');
+            var model = { tableroId: @Model.Id, instanciaId};
+            $.ajax({
+                type: "POST",
+                url: "/Compromiso/ListarPorInstancia",
+                data: model,
+                beforeSend: function () {
+                    cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+                },
+                complete: function () {
+                    cardCompromiso.find('div.card-wait').remove();
+                },
+                success: function (data) {
+                    cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                    cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+                    gestion.EventoDrag();
+                },
+                error: function () {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        var err = data;
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Ocurrió un problema!',
+                            html: err
+                        })
+                    })
+                }
+            });
+        }
+    };
+
+    dropzones.forEach(zona => {
+        zona.addEventListener("dragover", (event) => {
+            event.preventDefault();
+        });
+        zona.addEventListener('dragenter', (event) => {
+            //event.target.style.opacity = .5;
+            //$(event.target).closest('div.card').css('animation', 'pulse 1s infinite');
+            event.target.style.animation = "pulse 1s infinite";
+        });
+        zona.addEventListener('dragleave', (event) => {
+            //event.target.style.opacity = 1;
+            //$(event.target).closest('div.card').css('animation', '');
+            //var card = $(event.target).closest('div.card').get(0);
+            //card.style.animation = "";
+            event.target.style.animation = "";
+        });
+        zona.addEventListener('drop', (event) => {
+            //event.target.style.opacity = 1;
+            event.target.style.animation = "";
+
+            var cardCompromiso = $(compromiso).closest('div.card');
+            var estadoCompromiso = compromiso.dataset.estado;
+            var instanciaCompromiso = compromiso.dataset.instanciaid;
+
+            var card = $(event.target).closest('div.card').get(0);
+            switch (card.dataset.tipo) {
+                case "ESTADO":
+                    var ok = gestion.ValidarEstado(estadoCompromiso, card.dataset.estado);
+                    if (ok) gestion.ActualizarEstado(compromiso.dataset.id, card.dataset.estado, cardCompromiso, $(card));
+                    break;
+                case "INSTANCIA":
+                    var ok = gestion.ValidarInstancia(estadoCompromiso, instanciaCompromiso, card.dataset.instanciaid * 1, cardCompromiso, $(card));
+                    if (ok) {
+                        Swal.fire({
+                            input: 'textarea',
+                            inputPlaceholder: 'Ingrese el motivo',
+                            showCancelButton: true,
+                            confirmButtonText: 'Aceptar',
+                            cancelButtonText: 'Cancelar',
+                        }).then(x => {
+                            if (x.value) {
+                                gestion.ActualizarInstancia(compromiso.dataset.id, card.dataset.instanciaid * 1, x.value, cardCompromiso, $(card));
+                            } else Toast.fire({ type: 'error', title: 'Es necesario ingresar un motivo.' });
+                        });
+                    }
+                    break;
+            }
+        });
+    });
+
+        var Calendar = FullCalendar.Calendar;
+        //var Draggable = FullCalendarInteraction.Draggable;
+        var calendarEl = document.getElementById('calendar');
+
+        var calendar = new Calendar(calendarEl, {
+            locale: 'es',
+            plugins: ['bootstrap', 'interaction', 'dayGrid', 'timeGrid'],
+            header: { left: 'prev,next today', center: 'title', right: '' },
+            themeSystem: 'bootstrap',
+            eventSources: [gestion.ActualizarCalendario],
+            editable: true,
+            eventLimit: true,
+            eventResize: function ({ revert }) { revert(); },
+            eventRender: function ({ event, el }) {
+                var { icon } = event._def.extendedProps;
+                if (icon) $(el).find(".fc-title").prepend("<i class='" + icon + "'></i>&nbsp;");
+                $(el).bind('dblclick', function () {
+                    gestion.AbrirModal('/Compromiso/Asignar', { id: event.id, callBack: 'SetAsignar' });
+                });
+            },
+            eventDrop: function ({ event, revert }) {
+                var fechaReprogramar = moment(event.start.getTime());
+                var { estado } = event.extendedProps;
+                if (estado != '@EstadoCompromiso.REPROGRAMADO') {
+                    if (fechaReprogramar.diff(hoy, 'days') >= 0) {
+                        gestion.ActualizarEstado(event.id, '@EstadoCompromiso.REPROGRAMADO', null, null, true, fechaReprogramar.format('DD/MM/YYYY'), revert);
+                    } else {
+                        Swal.fire({ title: 'Ocurrió un problema!', text: 'No puede reprogramar una fecha anterior a hoy.' });
+                        revert();
+                    }
+                } else {
+                    Swal.fire({ title: 'Ocurrió un problema!', text: 'No puede reprogramar un compromiso que se encuentra REPROGRAMADO.' });
+                    revert();
+                }
+            }
+        });
+
+        calendar.render();
+
+
+    $(function () {
+
+        @if(cantidadFueraFecha > 0)
+        {
+            <text>
+            Swal.fire({ title: 'Alerta!', text: 'Tiene @cantidadFueraFecha compromiso(s) en FUERA DE FECHA.' });
+            </text>
+        }
+
+        $('#calendar').delegate('td[data-date]', 'dragover', function (event) {
+            event.preventDefault();
+        });
+
+        $('#calendar').delegate('td[data-date]', 'dragenter', function (event) {
+            var dataDate = this.dataset.date;
+            $(`td.fc-day[data-date="${dataDate}"]`).css({ 'background': 'rgb(188,232,241)', 'opacity': '.2' });
+        });
+
+        $('#calendar').delegate('td[data-date]', 'dragleave', function () {
+            var dataDate = this.dataset.date;
+            $(`td.fc-day[data-date="${dataDate}"]`).css({ 'background': '', 'opacity': '' });
+        });
+
+        $('#calendar').delegate('td[data-date]', 'drop', function () {
+            var dataDate = this.dataset.date;
+            $(`td.fc-day[data-date="${dataDate}"]`).css({ 'background': '', 'opacity': '' });
+            var fechaCalendario = moment(dataDate, 'YYYY-MM-DD');
+            var cardCompromiso = $(compromiso).closest('div.card');
+
+            if (fechaCalendario.diff(hoy, 'days') >= 0) {
+                if (cardCompromiso[0].dataset.tipo == 'INSTANCIA') {
+                    gestion.ActualizarEstado(compromiso.dataset.id, '@EstadoCompromiso.PROGRAMADO', cardCompromiso, null, true, fechaCalendario.format('DD/MM/YYYY'));
+                    calendar.refetchEvents();
+                } else {
+                    if (compromiso.dataset.estado == '@EstadoCompromiso.FUERA_DE_FECHA') {
+                        var ok = gestion.ValidarEstado(compromiso.dataset.estado, '@EstadoCompromiso.REPROGRAMADO', cardCompromiso.data("instanciaid"));
+                        if (ok) {
+                            gestion.ActualizarEstado(compromiso.dataset.id, '@EstadoCompromiso.REPROGRAMADO', cardCompromiso, null, true, fechaCalendario.format('DD/MM/YYYY'));
+                            calendar.refetchEvents();
+                        }
+                    } else {
+                        var ok = gestion.ValidarEstado(compromiso.dataset.estado, '@EstadoCompromiso.PROGRAMADO', cardCompromiso.data("instanciaid"));
+                        if (ok) {
+                            gestion.ActualizarEstado(compromiso.dataset.id, '@EstadoCompromiso.PROGRAMADO', cardCompromiso, null, true, fechaCalendario.format('DD/MM/YYYY'));
+                            calendar.refetchEvents();
+                        }
+                    }
+                }
+            } else  Swal.fire({ title: 'Ocurrió un problema!', text: 'No puede programar o reprogramar una fecha anterior a hoy.' });
+        });
+
+        $('.nuevo').dblclick(function () {
+            gestion.AbrirModal('/Compromiso/Nuevo', { 'tableroId': @Model.Id });
+        });
+
+        gestion.EventoDrag();
+    });
+
+    var SetAsignar = (model) => {
+        $('#modal-ventana').modal('hide');
+        var comp = $(`.compromiso[data-id="${model.id}"]`).get(0);
+        if (comp) {
+            var cardCompromiso = $(comp).closest('div.card');
+            var model;
+            //actualizar tablero
+            if (comp.dataset.instanciaid) model = { tableroId: @Model.Id, instanciaid: comp.dataset.instanciaid };
+            else model = { tableroId: @Model.Id, estado: comp.dataset.estado, instanciaid: 0 };
+            $.ajax({
+                    type: "POST",
+                    url: "/Compromiso/Listar",
+                    data: model,
+                    beforeSend: function () {
+                        cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+                    },
+                    complete: function () {
+                        cardCompromiso.find('div.card-wait').remove();
+                    },
+                    success: function (data) {
+                        //Listar compromisos
+                        cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                        cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+                        gestion.EventoDrag();
+                    },
+                    error: function () {
+                        $.get('/ErrorHandler/GetError', {}, (data) => {
+                            var err = data;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Ocurrió un problema!',
+                                html: err
+                            })
+                        })
+                    }
+                });
+        } else {
+            if (model['model.PorVerificar']) {
+                cardCompromiso = $('div.card[data-tipo="ESTADO"][data-estado="@EstadoCompromiso.POR_VERIFICAR"]');
+                $.ajax({
+                    type: "POST",
+                    url: "/Compromiso/Listar",
+                    data: {
+                        tableroId: @Model.Id,
+                        estado: '@EstadoCompromiso.POR_VERIFICAR',
+                        instanciaid: 0
+                    },
+                    beforeSend: function () {
+                        cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+                    },
+                    complete: function () {
+                        cardCompromiso.find('div.card-wait').remove();
+                    },
+                    success: function (data) {
+                        //Listar compromisos
+                        cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                        cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+
+                        gestion.EventoDrag();
+                    },
+                    error: function () {
+                        $.get('/ErrorHandler/GetError', {}, (data) => {
+                            var err = data;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Ocurrió un problema!',
+                                html: err
+                            })
+                        })
+                    }
+                });
+            }
+            calendar.refetchEvents();
+        }
+    }
+
+    var SetRechazar = (item) => {
+        $('#modal-ventana').modal('hide');
+        var comp = $(`.compromiso[data-id="${item['model.Id']}"]`).get(0);
+        var cardCompromiso = $(comp).closest('div.card');
+        Swal.fire({
+            input: 'textarea',
+            inputPlaceholder: 'Ingrese el motivo',
+            showCancelButton: true,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar',
+        }).then(x => {
+            if (x.value) {
+                var model = { id: item['model.Id'], motivo: x.value };
+                $.ajax({
+                    type: "POST",
+                    url: "/Compromiso/Rechazar",
+                    data: model,
+                    beforeSend: function () {
+                        cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+                    },
+                    complete: function () {
+                        cardCompromiso.find('div.card-wait').remove();
+                    },
+                    success: function (data) {
+                        cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                        cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+
+                        gestion.EventoDrag();
+
+                        Swal.fire({
+                            title: 'Perfecto!',
+                            text: 'El compromiso fue rechazado'
+                        });
+                    },
+                    error: function (data) {
+                        $.get('/ErrorHandler/GetError', {}, (data) => {
+                            var err = data;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Ocurrió un problema!',
+                                html: err
+                            })
+                        })
+                    }
+                });
+            } else Toast.fire({ type: 'error', title: 'Es necesario ingresar un motivo.' });
+        });
+    }
+
+    var SetCompromiso = (item) => {
+        $('#modal-ventana').modal('hide');
+        var  cardCompromiso = $('div.card[data-tipo="ESTADO"][data-estado="@EstadoCompromiso.NUEVO"]');
+        $.ajax({
+            type: "POST",
+            url: "/Compromiso/Listar",
+            data: {
+                tableroId: @Model.Id,
+                estado: '@EstadoCompromiso.NUEVO',
+                instanciaid: 0
+            },
+            beforeSend: function () {
+                cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+            },
+            complete: function () {
+                cardCompromiso.find('div.card-wait').remove();
+            },
+            success: function (data) {
+                //Listar compromisos
+                cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+
+                gestion.EventoDrag();
+            },
+            error: function () {
+                $.get('/ErrorHandler/GetError', {}, (data) => {
+                    var err = data;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Ocurrió un problema!',
+                        html: err
+                    })
+                })
+            }
+        });
+    }
+
+    var SetPorVerificar = (item) => {
+        $('#modal-ventana').modal('hide');
+        var cardCompromiso = $('div.card[data-tipo="ESTADO"][data-estado="@EstadoCompromiso.POR_VERIFICAR"]');
+        var model = { id: item['model.Id'] };
+        $.ajax({
+            type: "POST",
+            url: "/Compromiso/PorVerificar",
+            data: model,
+            beforeSend: function () {
+                cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+            },
+            complete: function () {
+                cardCompromiso.find('div.card-wait').remove();
+            },
+            success: function (data) {
+                cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+                calendar.refetchEvents();
+
+                gestion.EventoDrag();
+
+                Swal.fire({
+                    title: 'Perfecto!',
+                    text: 'El compromiso paso a POR VERIFICAR'
+                });
+            },
+            error: function () {
+                $.get('/ErrorHandler/GetError', {}, (data) => {
+                    var err = data;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Ocurrió un problema!',
+                        html: err
+                    })
+                })
+            }
+        });
+    }
+
+    var SetFinalizar = (item) => {
+        $('#modal-ventana').modal('hide');
+        var cardCompromiso = $('div.card[data-tipo="ESTADO"][data-estado="@EstadoCompromiso.POR_VERIFICAR"]');
+        var model = { id: item['model.Id'] };
+        $.ajax({
+            type: "POST",
+            url: "/Compromiso/Finalizar",
+            data: model,
+            beforeSend: function () {
+                cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+            },
+            complete: function () {
+                cardCompromiso.find('div.card-wait').remove();
+            },
+            success: function (data) {
+                cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+                calendar.refetchEvents();
+
+                gestion.EventoDrag();
+
+                Swal.fire({
+                    title: 'Perfecto!',
+                    text: 'El compromiso FINALIZÓ'
+                });
+            },
+            error: function () {
+                $.get('/ErrorHandler/GetError', {}, (data) => {
+                    var err = data;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Ocurrió un problema!',
+                        html: err
+                    })
+                })
+            }
+        });
+    }
+
+    var SetEscalarGerencia = (item) => {
+        $('#modal-ventana').modal('hide');
+        Swal.fire({
+            input: 'textarea',
+            inputPlaceholder: 'Ingrese el motivo',
+            showCancelButton: true,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar',
+        }).then((x) => {
+            if (x.value) {
+                var cardCompromiso = $('div.card[data-tipo="INSTANCIA"][data-instanciaid="@((int)InstanciaObligatoria.GERENCIA)"]');
+                var model = { id: item['model.Id'], motivo: x.value};
+                $.ajax({
+                    type: "POST",
+                    url: "/Compromiso/EscalarGerencia",
+                    data: model,
+                    beforeSend: function () {
+                        cardCompromiso.append(`<div class="card-img-overlay card-wait text-center"><div class="spinner-grow text-warning" role="status"><span class="sr-only">Cargando...</span></div></div>`);
+                    },
+                    complete: function () {
+                        cardCompromiso.find('div.card-wait').remove();
+                    },
+                    success: function (data) {
+                        if (cardCompromiso) {
+                            cardCompromiso.find('div.card-body').children('div.compromiso').remove();
+                            cardCompromiso.find('div.card-body').append(gestion.ObtenerCompromisos(data));
+                        }
+                        calendar.refetchEvents();
+
+                        gestion.EventoDrag();
+
+                        Swal.fire({
+                            title: 'Perfecto!',
+                            text: 'El compromiso se Escalo a GERENCIA'
+                        });
+                    },
+                    error: function () {
+                        $.get('/ErrorHandler/GetError', {}, (data) => {
+                            var err = data;
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Ocurrió un problema!',
+                                html: err
+                            })
+                        })
+                    }
+                });
+            } else Toast.fire({ type: 'error', title: 'Es necesario ingresar un motivo.' });
+        });
+    }
+
+    var SetReprogramacion = () => {
+        $('#modal-ventana').modal('hide');
+        calendar.refetchEvents();
+        Swal.fire({
+            title: 'Perfecto!',
+            text: 'El compromiso fue reprogramado'
+        });
+    }
+</script>

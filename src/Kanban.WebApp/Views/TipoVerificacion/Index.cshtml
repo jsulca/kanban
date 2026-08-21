@@ -1,0 +1,116 @@
+﻿@{
+    ViewBag.Title = "Lista de Áreas";
+}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-success-border">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-clipboard-list"></i>&nbsp;Tipos de Verificación</h3>
+                <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+            </div>
+            <div class="card-body">
+                <div id="Error"></div>
+                <div class="text-right">
+                    <button id="btnNuevo" type="button" class="btn btn-primary btn-sm"><i class="fa fa-plus"></i>&nbsp; Nuevo</button>
+                </div>
+                <hr />
+                <div class="table-responsive">
+                    <table id="tblArea" class="table table-sm table-bordered table-hover">
+                        <thead>
+                            <tr class="bg-primary">
+                                <th width="20"></th>
+                                <th width="20">#</th>
+                                <th>Nombre</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+
+<script>
+    var index = {
+        Listar: function () {
+            var table = $("#tblArea");
+            $.ajax({
+                url: "/TipoVerificacion/Listar",
+                type: "GET",
+                dataType: "json",
+                beforeSend: function (xhr) { },
+                complete: function () { },
+                success: function (data) {
+                    if (data.length == 0) table.children('tbody').append("<tr><td colspan='4' class='text-center'>No existen registros</td></tr>");
+                    else index.GenerarTabla(table, data);
+                },
+                error: function (data) {
+                    //helper.errorShow('#Error', data.responseText)
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            var rows = '';
+            $.each(lista, function (i, r) {
+                rows += `<tr>
+                            <td><a class="text-warning option editar" data-id="${r.Id}"><i class="fa fa-pencil-alt"></i></a></td>
+                            <td class="text-right">${i + 1}</td>
+                            <td>${ r.Nombre}</td>
+                        </tr>`;
+            });
+            tbody.append(rows);
+        },
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                    //helper.errorShow('#Error', result.responseText);
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        }
+    };
+
+
+    $(function () {
+        index.Listar();
+
+        $('#btnNuevo').click(function () {
+            index.AbrirModal('/TipoVerificacion/Nuevo', { callBack: 'SetOrigen' });
+        });
+
+        $('#tblArea tbody').delegate('a.editar', 'click', function () {
+            var id = this.dataset.id;
+            index.AbrirModal('/TipoVerificacion/Editar', { callBack: 'SetOrigen', id });
+        });
+
+    });
+
+    var SetOrigen = function () {
+        $('#modal-ventana').modal('hide');
+        index.Listar();
+    }
+</script>

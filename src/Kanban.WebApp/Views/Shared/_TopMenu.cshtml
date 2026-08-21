@@ -1,0 +1,73 @@
+﻿@model UserInformation
+@{
+    int alertasPendientes = ViewBag.AlertasPendientes,
+        cantidadPorPagina = ViewBag.CantidadPorPagina;
+    List<Alerta> lista = ViewBag.Lista;
+    TimeSpan diferencia;
+}
+<ul class="navbar-nav">
+    <li class="nav-item">
+        <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
+    </li>
+    <li class="nav-item d-none d-sm-inline-block">
+        <a href="/" class="nav-link">Inicio</a>
+    </li>
+</ul>
+<ul class="navbar-nav ml-auto">
+    <li class="nav-item dropdown">
+        <a class="nav-link" id="confirmar-pendientes" data-toggle="dropdown" href="#" aria-expanded="false" 
+           data-pagina="1" data-cantidad="@cantidadPorPagina" data-nuevo="@(alertasPendientes == 0 ? "true" : "")">
+            <i class="far fa-bell"></i>
+            @if(alertasPendientes > 0)
+            {
+                <span class="badge badge-danger navbar-badge">@alertasPendientes</span>
+            }
+        </a>
+        <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="left: inherit; right: 0px; max-height: 60vh; overflow-y: auto;">
+            @foreach (var item in lista)
+            {
+                diferencia = DateTime.Now - item.FechaRegistro;
+                <a href="/Compromiso/Asignado/@item.Compromiso.Codigo" class="dropdown-item">
+                    <!-- Message Start -->
+                    <div class="media">
+                        <div class="media-body">
+                            <h3 class="dropdown-item-title">
+                                @item.Compromiso.Codigo
+                            </h3>
+                            <p class="text-sm">@item.Compromiso.Descripcion</p>
+                            @if (diferencia.TotalHours < 24)
+                            {
+                                if (diferencia.TotalHours < 1)
+                                {
+                                    <p class="text-sm text-muted">hace <i class="far fa-clock mr-1"></i>@diferencia.TotalMinutes.ToString("#0") minutos</p>
+                                }
+                                else
+                                {
+                                    <p class="text-sm text-muted">hace <i class="far fa-clock mr-1"></i>@diferencia.TotalHours.ToString("#0") horas</p>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-sm text-muted"><i class="far fa-clock mr-1"></i>@item.FechaRegistro.ToString("d MMM yyyy")</p>
+                            }
+                        </div>
+                    </div>
+                    <!-- Message End -->
+                </a>
+                <div class="dropdown-divider"></div>
+            }
+            <a href="/Compromiso/Asignado" class="dropdown-item dropdown-footer">Ver todas mis asignaciones</a>
+        </div>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link" data-toggle="dropdown" href="#">
+            @Model.UserName &nbsp;
+            <i class="far fa-user"></i>
+        </a>
+        <div class="dropdown-menu dropdown-menu-right">
+            <a href="/Account/Logout" class="dropdown-item">
+                <i class="fas fa-power-off mr-2"></i> Cerrar sesión
+            </a>
+        </div>
+    </li>
+</ul>

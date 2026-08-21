@@ -1,0 +1,160 @@
+﻿@model Pagina
+
+<div class="modal-dialog animated bounceInDown">
+    <div class="modal-content">
+        @using (Html.BeginForm("Nuevo", "Pagina", null, FormMethod.Post, null, new { @id = "form-modal-editar" }))
+        {
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Página</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Nombre: <span class="text-danger">(*)</span></label>
+                            @Html.TextBoxFor(m => m.Nombre, new { @class = "form-control form-control-sm", @maxLength = "100" })
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Area:</label>
+                            @Html.TextBoxFor(m => m.Area, new { @class = "form-control form-control-sm", @maxLength = "50" })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Controlador: <span class="text-danger">(*)</span></label>
+                            @Html.TextBoxFor(m => m.Controlador, new { @class = "form-control form-control-sm", @maxLength = "50" })
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label>Accion: <span class="text-danger">(*)</span></label>
+                            @Html.TextBoxFor(m => m.Accion, new { @class = "form-control form-control-sm", @maxLength = "50" })
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <div class="form-row">
+                    <div class="col-12">
+                        <div class="text-right">
+                            <button type="button" id="btnNuevoControl" class="btn btn-sm btn-primary" title="Nuevo"><i class="fa fa-plus"></i>&nbsp;Nuevo</button>
+                        </div>
+                        <br />
+                        <div class="table-responsive">
+                            <table id="tblControl" class="table table-sm table-bordered table-hover table-vertical-align">
+                                <thead>
+                                    <tr class="bg-info">
+                                        <th width="20"></th>
+                                        <th width="20">Nº</th>
+                                        <th>Nombre</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Controles != null)
+                                    {
+                                        int i = 0;
+                                        foreach (var item in Model.Controles)
+                                        {
+                                            <tr data-id="@item.Id">
+                                                <td class="text-center">
+                                                    <a class="option eliminar"><i class="fa fa-trash-alt text-danger"></i></a>
+                                                </td>
+                                                <td class="text-right">@(i + 1)</td>
+                                                <td><input class="form-control form-control-sm Nombre" value="@item.Nombre" /></td>
+                                            </tr>
+                                            i++;
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div id="msgEditar"></div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-save"></i>&nbsp; Guardar</button>
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp;Cancelar</button>
+            </div>
+
+        }
+    </div>
+</div>
+<script>
+    var editar = {
+        ObtenerModelo: function () {
+            var model = {
+                id: @Model.Id,
+                nombre: $('#form-modal-editar #Nombre').val(),
+                area: $('#form-modal-editar #Area').val(),
+                controlador: $('#form-modal-editar #Controlador').val(),
+                accion: $('#form-modal-editar #Accion').val(),
+                controles: []
+            };
+
+            $.each($('#tblControl tbody tr'), function (i, tr) {
+                model.controles.push({
+                    id: tr.dataset.id || 0,
+                    nombre: $(tr).find('input.Nombre').val(),
+                    eliminado: tr.hasAttribute('hidden')
+                });
+            });
+
+            return model;
+        },
+        ActualizarControles: function () {
+            $.each($('#tblControl tbody tr:visible'), function (i, r) {
+                $(r).find('td')[1].innerText = (i + 1);
+            });
+        }
+    };
+    $(function () {
+        $('#btnNuevoControl').click(function () {
+            var rows = $('#tblControl tbody tr:visible').length;
+            var tr = `<tr>
+                        <td class="text-center"><a class="option eliminar"><i class="fa fa-trash-alt text-danger"></i></a></td>
+                        <td class="text-right">${ rows + 1}</td>
+                        <td><input class="form-control form-control-sm Nombre" /></td>
+                     </tr>`;
+            $('#tblControl tbody').append(tr);
+        });
+        $('#tblControl tbody').delegate('a.eliminar', 'click', function () {
+            var tr = $(this).parents().eq(1);
+            if (tr.data('id') > 0) tr.attr('hidden', 'hidden');
+            else tr.remove();
+            editar.ActualizarControles();
+        });
+        $('#form-modal-editar').submit(function (e) {
+            $.ajax({
+                type: "POST",
+                url: "/Seguridad/Pagina/Editar",
+                data: editar.ObtenerModelo(),
+                beforeSend: function () {
+                    $("#msgEditar").hide();
+                    $('#form-modal-editar button').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    SetEditarPagina();
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    helper.errorShow('#msgEditar', result.responseText);
+                    $("#msgEditar").slideDown();
+                    $('#form-modal-editar button').removeAttr("disabled");
+                }
+            });
+            e.preventDefault();
+        });
+    });
+</script>

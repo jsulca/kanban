@@ -1,0 +1,153 @@
+﻿@{
+    ViewBag.Title = "Modelar las Confirmaciones";
+}
+    <div class="row">
+        <div class="col-12">
+            <div class="card card-default">
+                <div class="card-header">
+                    <h3 class="card-title w-100">
+                        <i class="fas fa-user-check"></i>&nbsp;Modelar confirmaciones
+                        <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                    </h3>
+                </div>
+                <div class="card-body bg-light">
+                    <div class="form-row" id="Filtros">
+                        <div class="col-md">
+                            <div class="form-group">
+                                <label for="FNombre">Nombre: </label>
+                                <input class="form-control form-control-sm" id="FNombre" />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="FRom">Rom: </label>
+                                <select id="FRom" class="form-control form-control-sm">
+                                    <option value="">TODOS</option>
+                                    <option value="true">SI</option>
+                                    <option value="false">NO</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="FActivo">Activo: </label>
+                                <select id="FActivo" class="form-control form-control-sm">
+                                    <option value="">TODOS</option>
+                                    <option value="true">SI</option>
+                                    <option value="false">NO</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-right bg-white">
+                    <div id="mensajes"></div>
+                    <button role="button" class="btn btn-success" id="btnNuevo"><i class="fa fa-plus"></i>&nbsp; Nuevo</button>
+                    <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card card-info">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table id="tblVerificacion"
+                               class="table table-nowrap table-sm table-bordered table-hover"
+                               data-function="modelar.Listar"
+                               data-pageindex="1"
+                               data-totalrows="0"
+                               data-pagesize="20"
+                               data-paginator="#paginator">
+                            <thead>
+                                <tr class="bg-success text-center">
+                                    <th width="60"></th>
+                                    <th width="20">#</th>
+                                    <th width="150">Tipo Ver.</th>
+                                    <th>Nombre</th>
+                                    <th width="150">Rom</th>
+                                    <th width="150">Activo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-end" id="paginator"></div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+<script>
+    var modelar = {
+        Listar: function (page) {
+            var table = $("#tblVerificacion");
+            var model = {
+                'pageIndex': page,
+                'pageSize': table.data('pagesize'),
+                'filter.Nombre': $("#FNombre").val(),
+                'filter.Activo': $("#FActivo").val(),
+                'filter.Rom': $("#FRom").val()
+            };
+            $.ajax({
+                url: "/Verificacion/ListarPorPagina",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) { },
+                complete: function () { },
+                success: function (data) {
+                    table.data('pageindex', page);
+                    table.data('totalrows', data.totalRows);
+                    modelar.GenerarTabla(table, data.lista);
+                    if (data.totalRows == 0) table.append(`<tr><td class="text-center" colspan="6">No se encontraron registros.</td></tr>`);
+                },
+                error: function () {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            var rows = '';
+            var numero = (table.data('pagesize') * table.data('pageindex')) - table.data('pagesize');
+            $.each(lista, function (i, r) {
+                rows += `<tr>
+                            <td class="text-center"><a class="option editar text-warning" data-id="${r.Id}"><i class="fa fa-pencil-alt"></i></a> <a class="option duplicar text-info ml-1" data-id="${r.Id}"><i class="fas fa-copy"></i></a></td>
+                            <td class="text-right">${++numero}</td>
+                            <td class="text-center">${r.TipoVerificacion.Nombre}</td>
+                            <td>${r.Nombre}</td>
+                            <td class="text-center text-${r.Rom ? "success" : "danger"}">${r.Rom ? "SI" : "NO"}</td>
+                            <td class="text-center text-${r.Activo ? "success" : "danger"}"">${r.Activo ? "SI" : "NO"}</td>
+                        </tr>`;
+
+            });
+            helper.pagination.update(table);
+            tbody.append(rows);
+        }
+    };
+    $(function () {
+        $('#Filtros input').keypress(function (e) {
+            var key = e.keyCode || event.keyCode;
+            if (key == 13) modelar.Listar(1);
+        });
+        $('#Filtros select').change(function (e) { modelar.Listar(1); });
+        $('#tblVerificacion').delegate('a.editar', 'click', function () {
+            var id = this.dataset.id;
+            location.href = '/Verificacion/Editar/' + id;
+        });
+        $('#tblVerificacion').delegate('a.duplicar', 'click', function () {
+            var id = this.dataset.id;
+            location.href = '/Verificacion/Nuevo/' + id;
+        });
+        $('#btnNuevo').click(function () {
+            location.href = '/Verificacion/Nuevo';
+        });
+        modelar.Listar(1);
+    });
+</script>

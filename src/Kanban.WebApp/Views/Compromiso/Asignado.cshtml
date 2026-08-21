@@ -1,0 +1,208 @@
+﻿@{
+    ViewBag.Title = "Mis compromisos asignados";
+    int responsableId = ViewBag.ResponsableId;
+    string codigo = ViewBag.Codigo ?? "";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="fas fa-user-cog"></i>&nbsp;Mis Compromisos Asignados
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-body bg-light">
+                <div class="form-row" id="Filtros">
+                    <div class="col-3">
+                        <label>Célula:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese la célula" id="FCelula" />
+                    </div>
+                    <div class="col-3">
+                        <label>Código:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese el Código" id="FCodigo" value="@codigo" />
+                    </div>
+                    <div class="col-6">
+                        <label>Descripción:</label>
+                        <input class="form-control form-control-sm" placeholder="Ingrese la breve descripción" id="FDescripcion" />
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-right bg-white">
+                <div id="mensajes"></div>
+                <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div id="list" data-pagesize="8" data-pageindex="1" data-function="index.Listar" data-totalrows="0" data-paginator="#paginator" class="row"></div>
+        <div id="paginator" class="d-flex justify-content-center"></div>
+    </div>
+</div>
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+<!-- SweetAlert2 -->
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+    var index = {
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                }
+            });
+        },
+        Listar: function (page) {
+            var table = $("#list");
+            var model = {
+                'pageIndex': page,
+                'pageSize': table.data('pagesize'),
+                'filter.Codigo': $("#FCodigo").val(),
+                'filter.Descripcion': $("#FDescripcion").val(),
+                'filter.EstructuraDescripcion': $("#FCelula").val()
+            };
+            $.ajax({
+                url: "/Compromiso/ListarAsignadoPorPagina",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) {
+                    $('.refresh-container').attr('style', 'display: block');
+                },
+                complete: function () {
+                    $('.refresh-container').removeAttr('style');
+                },
+                success: function (data) {
+                    table.data('pageindex', page);
+                    table.data('totalrows', data.totalRows);
+                    index.GenerarTabla(table, data.lista);
+                    if (data.totalRows == 0) table.append(`<div class="col-md-12"><div class="alert alert-warning alert-dismissible"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button> No existen registros.</div></div>`);
+                },
+                error: function () {
+                    //helper.errorShow('#Error', data.responseText)
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            table.children('div').remove();
+            var rows = '';
+            for (var i = 0; i < lista.length; i += 4) {
+                //rows += `<div class="row">`;
+                if (lista[i]) rows += index.ObtenerItem(lista[i]);
+                if (lista[i + 1]) rows += index.ObtenerItem(lista[i + 1]);
+                if (lista[i + 2]) rows += index.ObtenerItem(lista[i + 2]);
+                if (lista[i + 3]) rows += index.ObtenerItem(lista[i + 3]);
+                //rows += `</div>`;
+            }
+            helper.pagination.update(table);
+            table.append(rows);
+        },
+        ObtenerItem: function (item) {
+            return `<div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card text-center">
+                            ${item.Nuevo ? `<div class="ribbon-wrapper"><div class="ribbon bg-info">Nuevo</div></div>` : ''}
+                            <div class="card-header bg-${item.ColorFondo.Clase || 'light'}">
+                                &nbsp;
+                            </div>
+                            <div class="card-body">
+                                <h4 class="card-title float-none"><a href="javascript:void(0)" class="option ver" data-id="${item.Id}">${item.Codigo}</a></h4>
+                                <p class="font-weight-bold">${item.InstanciaId ? item.Instancia.Abreviatura : item.Estado}</p>
+                                <p class="card-text text-truncate">${item.Descripcion}<br/><i>${item.Estructura.Descripcion}</i></p>
+                                <button type="button" class="btn btn-success porverificar" data-id="${item.Id}"><i class="fa fa-check"></i>&nbsp; Confirmar</button>
+                            </div>
+                            <div class="card-footer text-muted text-center">Programado para el ${item.FechaReprogramacion ? item.FechaReprogramacion : item.FechaProgramacion}</div>
+                        </div>
+                    </div>`;
+        }
+    };
+
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'bottom',
+        showConfirmButton: false,
+        timer: 2500
+    });
+
+    $(function () {
+        $('#Filtros input').keypress(function (e) {
+            var key = e.keyCode || event.keyCode;
+            if (key == 13) index.Listar(1);
+        });
+        $('#Filtros select').change(function (e) { index.Listar(1); });
+        $('#btnNuevo').click(function () {
+            index.AbrirModal('/Compromiso/Nuevo', {});
+        });
+        $('#list').delegate('button.porverificar', 'click', function () {
+            var id = this.dataset.id;
+            Swal.fire({
+                title: '¿Ya realizo el compromiso?',
+                text: 'El compromiso pasará un estado de POR VERIFICAR',
+                showCancelButton: true,
+                confirmButtonText: 'SI',
+                cancelButtonText: 'NO',
+            }).then(x => {
+                if (x.value) {
+                    var model = { id };
+                    $.ajax({
+                        type: "POST",
+                        url: "/Compromiso/Asignado",
+                        data: model,
+                        beforeSend: function () {
+                            helper.wait.append('mensajes');
+                        },
+                        complete: function () {
+                            helper.wait.remove('mensajes');
+                        },
+                        success: function (data) {
+                            Swal.fire({
+                                title: 'Perfecto!',
+                                text: 'El compromiso paso a POR VERIFICAR'
+                            });
+                            index.Listar($('#list').data('pageindex'));
+                        },
+                        error: function () {
+                            //helper.errorShow('#mensajes', result.responseText);
+                            $.get('/ErrorHandler/GetError', {}, (data) => {
+                                helper.errorShow('#mensajes', data);
+                            })
+                        }
+                    });
+                }
+            });
+        });
+
+        $('#list').delegate('a.ver', 'click', function () {
+            var id = this.dataset.id;
+            index.AbrirModal('/Compromiso/Ver', { id });
+        });
+
+        index.Listar(1);
+    });
+
+    var SetCompromiso = function () {
+        $('#modal-ventana').modal('hide');
+        index.Listar(1);
+        Toast.fire({
+            type: 'success',
+            title: 'Se registro el compromiso.'
+        });
+
+    }
+
+</script>

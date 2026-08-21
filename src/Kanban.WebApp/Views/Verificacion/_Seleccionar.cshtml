@@ -1,0 +1,115 @@
+﻿<div class="modal-dialog modal-lg animated bounceInDown">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Seleccionar Confirmación</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="table-responsive">
+                <table id="tblVerificacion"
+                       class="table table-nowrap table-sm table-bordered table-hover"
+                       data-function="seleccionar.Listar"
+                       data-pageindex="1"
+                       data-totalrows="0"
+                       data-pagesize="20"
+                       data-paginator="#paginatorseleccionar">
+                    <thead>
+                        <tr>
+                            <td colspan="2"></td>
+                            <td><input class="form-control form-control-sm" id="FTipoVerificacionNombre" /></td>
+                            <td><input class="form-control form-control-sm" id="FNombre" /></td>
+                        </tr>
+                        <tr class="bg-success text-center">
+                            <th width="20"></th>
+                            <th width="20">#</th>
+                            <th width="200">Tipo Confirmación</th>
+                            <th>Nombre</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-end" id="paginatorseleccionar"></div>
+        </div>
+        <div id="msgEditar"></div>
+        <div class="modal-footer">
+            <button id="btnAceptar" type="button" class="btn btn-sm btn-primary"><i class="fa fa-check"></i>&nbsp; Aceptar</button>
+            <a href="javascript:void(0)" class="btn btn-sm btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp; Cancelar</a>
+        </div>
+    </div>
+</div>
+<script>
+
+    var seleccionar = {
+        Listar: function (page) {
+            var table = $("#tblVerificacion");
+            var model = {
+                'pageIndex': page,
+                'pageSize': table.data('pagesize'),
+                'filter.Nombre': $("#tblVerificacion input#FNombre").val(),
+                'filter.TipoVerificacionNombre': $("#tblVerificacion input#FTipoVerificacionNombre").val(),
+                'filter.Activo': true
+            };
+            $.ajax({
+                url: "/Verificacion/ListarPorPagina",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) { },
+                complete: function () { },
+                success: function (data) {
+                    table.data('pageindex', page);
+                    table.data('totalrows', data.totalRows);
+                    seleccionar.GenerarTabla(table, data.lista);
+                    if (data.totalRows == 0) table.append(`<tr><td class="text-center" colspan="4">No se encontraron registros.</td></tr>`);
+                },
+                error: function (data) {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            var rows = '';
+            var numero = (table.data('pagesize') * table.data('pageindex')) - table.data('pagesize');
+            $.each(lista, function (i, r) {
+                rows += `<tr>
+                            <td class="text-center"><input type="radio" value="${r.Id}" name="Verificacion" /></td>
+                            <td class="text-right">${++numero}</td>
+                            <td class="text-center">${r.TipoVerificacion.Nombre}</td>
+                            <td>${r.Nombre}</td>
+                        </tr>`;
+
+            });
+            helper.pagination.update(table);
+            tbody.append(rows);
+        }
+    };
+
+    $(function () {
+        seleccionar.Listar(1);
+        $("#tblVerificacion input").keypress(function (e) {
+            var keyCode = e.keyCode || event.keyCode;
+            if(keyCode == 13) seleccionar.Listar(1);
+        });
+
+        $('#btnAceptar').click(function () {
+            var radio = $('#tblVerificacion input:checked');
+            var tr = radio.parents().eq(1);
+            if (radio.length > 0) {
+                var tds = tr.find('td');
+                var item = {
+                    Id: radio.val(),
+                    Nombre: tds[2].innerText
+                };
+                @string.Format("{0}(item);", ViewBag.CallBack)
+            }
+        });
+    });
+</script>

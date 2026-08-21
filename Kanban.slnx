@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kanban.Application/Kanban.Application.csproj" />
+    <Project Path="src/Kanban.Domain/Kanban.Domain.csproj" />
+    <Project Path="src/Kanban.Infrastructure/Kanban.Infrastructure.csproj" />
+    <Project Path="src/Kanban.SharedKernel/Kanban.SharedKernel.csproj" />
+    <Project Path="src/Kanban.WebApp/Kanban.WebApp.csproj" />
+  </Folder>
+</Solution>

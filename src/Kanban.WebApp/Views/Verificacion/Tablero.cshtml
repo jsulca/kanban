@@ -1,0 +1,124 @@
+﻿@model List<Estructura>
+@{
+    ViewBag.Title = "Tablero de Control";
+}
+<link href="~/plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+<div class="row">
+    <div class="col-md-12">
+
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="far fa-chart-bar"></i>&nbsp;Tablero de control de las confirmaciones
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-footer text-right bg-white">
+                <div id="mensajes"></div>
+                <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+            </div>
+        </div>
+    </div>
+
+    @if (Model != null)
+    {
+        foreach (var item in Model)
+        {
+            <div class="col-md-4 col-sm-6">
+                <div class="card card-widget widget-user-2">
+
+                    <div class="card-header bg-info">
+                        <h3 class="card-title"><i class="far fa-calendar-alt"></i>&nbsp;@item.Descripcion</h3>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="/Verificacion/Gestion/@item.Id" class="btn btn-warning"><i class="fa fa-calendar-alt"></i>&nbsp; Gestionar</a>
+                        <button type="button" class="btn btn-success btn-reporte" data-id="@item.Id"><i class="fa fa-file-excel"></i>&nbsp; Reporte</button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">REPORTE CONFIRMACIONES</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Fecha hasta:</label>
+                            <input class="form-control form-control-sm datepicker" id="FechaDesde" value="01/01/@DateTime.Today.Year" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Fecha desde: </label>
+                            <input class="form-control form-control-sm datepicker" id="FechaHasta" value="@DateTime.Today.ToString("dd/MM/yyyy")" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="msgNuevo"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="btnBuscar"><i class="fa fa-search"></i>&nbsp; Buscar</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp; Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<iframe name="frmDescarga" id="frmDescarga" hidden="hidden"></iframe>
+<script src="~/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+<script src="~/plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js"></script>
+<script>
+    var id;
+
+    $(function () {
+        $('.datepicker').datepicker({
+            format: 'dd/mm/yyyy',
+            language: 'es',
+            autoclose: true
+        });
+
+        $('button.btn-reporte').click(function () {
+            id = $(this).data('id');
+            $('#modal-ventana').modal();
+        });
+
+        $('#btnBuscar').click(function () {
+            if ($("#FechaDesde").val() && $("#FechaHasta").val()) {
+
+                $('#modal-ventana').modal('hide');
+                var form = document.createElement('form');
+                var model = {
+                    'model.TableroId': id,
+                    'model.FechaDesde': $("#FechaDesde").val(),
+                    'model.FechaHasta': $("#FechaHasta").val()
+                };
+                form.method = 'POST';
+                form.action = '/Verificacion/Reporte';
+                form.target = 'frmDescarga';
+                form.hidden = true;
+                form.classList.add('hidden');
+
+                var input;
+                Object.keys(model).forEach(function (key) {
+                    input = document.createElement("input");
+                    input.name = key;
+                    input.value = model[key];
+                    form.appendChild(input);
+                });
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    });
+</script>

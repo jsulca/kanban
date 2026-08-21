@@ -1,0 +1,146 @@
+﻿@model Compromiso
+@{
+    List<Estructura> tableros = ViewBag.Tableros;
+    List<Indicador> indicadores = ViewBag.Indicadores;
+    List<Origen> origenes = ViewBag.Origenes;
+}
+<link href="~/plugins/dropify/css/dropify.min.css" rel="stylesheet" />
+<div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">NUEVO COMPROMISO</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            @using (Html.BeginForm("Nuevo", "Compromiso", null, FormMethod.Post, null, new { @id = "form-modal-editar", @class = "container-fluid" }))
+            {
+                @Html.HiddenFor(m => m.PlanAccionId)
+                <div class="form-row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Reportado por:</label>
+                            <input class="form-control form-control-sm" disabled="disabled" value="@ViewBag.Empleado" />
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Reportado desde: </label>
+                            <input class="form-control form-control-sm"  disabled="disabled" value="@ViewBag.Ruta" />
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Tablero: <span class="text-danger">(*)</span></label>
+                            @Html.DropDownListFor(m => m.TableroId, new SelectList(tableros, "Id", "Descripcion"), new { @class = "form-control form-control-sm" })
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Descripción Breve: <span class="text-danger">(*)</span></label>
+                            @Html.TextBoxFor(m => m.Descripcion, new { @class = "form-control form-control-sm", maxlength = "30" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Fecha:</label>
+                            <input class="form-control form-control-sm" disabled="disabled" value="@DateTime.Today.ToString("dd/MM/yyyy")" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="Impacto">Origen: </label>
+                            @Html.DropDownListFor(m => m.Origen, new SelectList(origenes, "Nombre", "Nombre"), new { @class = "form-control form-control-sm" })
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="Impacto">Impacto en indicador: </label>
+                            @Html.DropDownListFor(m => m.Impacto, new SelectList(indicadores, "Nombre", "Nombre"), new { @class = "form-control form-control-sm" })
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Descripción Detallada:</label>
+                            @Html.TextAreaFor(m => m.Detalle, new { @class = "form-control form-control-sm", rows = 4 })
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Evidencia:</label>
+                            <input id="Foto" type="file" class="dropify" data-max-file-size="3M" accept="image/png,image/jpg,image/jpeg" />
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div id="msgNuevo"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="btnGuardar"><i class="fa fa-save"></i>&nbsp; Guardar</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal"><i class="fa fa-times"></i>&nbsp; Cancelar</button>
+        </div>
+    </div>
+</div>
+<script src="~/plugins/dropify/js/dropify.min.js"></script>
+<script>
+    var nuevo = {
+        ObtenerModelo: function () {
+            var formData = new FormData();
+            formData.append('model.PlanAccionId', $('#PlanAccionId').val());
+            formData.append('model.TableroId', $('#TableroId').val());
+            formData.append('model.Descripcion', $('#Descripcion').val());
+            formData.append('model.Impacto', $('#Impacto').val());
+            formData.append('model.Origen', $('#Origen').val());
+            formData.append('model.Detalle', $('#Detalle').val());
+            formData.append('model.Foto', $('#Foto').prop('files')[0]);
+            return formData;
+        }
+    };
+
+    $(function () {
+        $('.dropify').dropify({
+            messages: {
+                'default': 'Arrastre y suelte un archivo aquí o haga click',
+                'replace': 'Arrastre y suelte un archivo aquí o haga click para reemplazar',
+                'remove': 'Quitar',
+                'error': 'Ooops, ocurrió un error'
+            }
+        });
+
+        $('#Descripcion').focus();
+
+        $('#btnGuardar').click(function () {
+            var model = nuevo.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Compromiso/Nuevo",
+                data: model,
+                contentType: false,
+                processData: false,
+                cache: false,
+                beforeSend: function () {
+                    $("#msgNuevo").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                    helper.wait.append('.modal-footer');
+                },
+                complete: function () {
+                    helper.wait.remove('.modal-footer');
+                },
+                success: function (result) {
+                    model['id'] = result;
+                    @string.Format("{0}(model);", ViewBag.CallBack)
+                },
+                error: function (result) {
+                    helper.wait.remove('.modal-footer');
+                    //helper.errorShow('#msgNuevo', result.responseText);
+                    $("#msgNuevo").slideDown();
+                    $('#btnGuardar').removeAttr("disabled");
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#msgNuevo', data);
+                    })
+                }
+            });
+        });
+    });
+</script>

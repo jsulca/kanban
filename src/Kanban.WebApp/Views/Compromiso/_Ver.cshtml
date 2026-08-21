@@ -1,0 +1,107 @@
+﻿@model Compromiso
+<div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            
+            <h5 class="modal-title">VER COMPROMISO</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                @if (Model.PlanAccionId.HasValue)
+                {
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="text-warning">Fuente:</label>
+                            <input class="form-control form-control-sm" disabled="disabled" value="Plan de Acción" />
+                        </div>
+                    </div>
+                }
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Código:</label>
+                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.Codigo" />
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label>Reportado por:</label>
+                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.EmpleadoRegistro.Nombre @Model.EmpleadoRegistro.ApellidoPaterno @Model.EmpleadoRegistro.ApellidoMaterno" />
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Tablero:</label>
+                        <input class="form-control form-control-sm" disabled="disabled" value="@ViewBag.Tablero" />
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Reportado desde:</label>
+                        <input class="form-control form-control-sm" disabled="disabled" value="@ViewBag.Ruta" />
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Descripción Breve:</label>
+                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.Descripcion" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Fecha Registro:</label>
+                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.FechaRegistro.ToString("dd/MM/yyyy HH:mm")" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Origen:</label>
+                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.Origen" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label>Impacto en indicador:</label>
+                        <input class="form-control form-control-sm" disabled="disabled" value="@Model.Impacto" />
+                    </div>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label>Descripción Detallada:</label>
+                        <textarea class="form-control form-control-sm" disabled="disabled" rows="4">@Model.Detalle</textarea>
+                    </div>
+                </div>
+                @if (Model.Estado == EstadoCompromiso.PROGRAMADO || Model.Estado == EstadoCompromiso.REPROGRAMADO)
+                {
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Acción a Realizar:</label>
+                            <textarea class="form-control form-control-sm" disabled="disabled" rows="4">@Model.Accion</textarea>
+                        </div>
+                    </div>
+                }
+
+                @if (Model.Estado == EstadoCompromiso.FINALIZADO || Model.Estado == EstadoCompromiso.RECHAZADO)
+                {
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label>Respuesta:</label>
+                            <textarea class="form-control form-control-sm @(Model.Estado == EstadoCompromiso.FINALIZADO ? "is-valid": "is-invalid")" disabled="disabled" rows="4">@Model.Respuesta</textarea>
+                        </div>
+                    </div>
+                }
+                @if (Model.FotoId.HasValue)
+                {
+                    <div class="col-md-12 text-center">
+                        <img class="img-fluid rounded img-thumbnail" src="/Adjunto/VerFotoBlob/@Model.FotoId.Value" alt="Se visualiza una imagen del compromiso" />
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal"><i class="fa fa-check"></i>&nbsp; Aceptar</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,7 @@
+@using Kanban.WebApp
+@using Kanban.WebApp.Commons
+@using Kanban.WebApp.Models
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@* Las vistas vienen de MVC5 y no usan tag helpers: llevan C# suelto en la zona de
+   atributos de <option>, que el tag helper de Core rechaza (RZ1031). *@
+@removeTagHelper Microsoft.AspNetCore.Mvc.TagHelpers.OptionTagHelper, Microsoft.AspNetCore.Mvc.TagHelpers

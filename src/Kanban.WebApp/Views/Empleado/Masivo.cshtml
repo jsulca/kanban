@@ -1,0 +1,145 @@
+﻿@{
+    ViewBag.Title = "Registro Masivo de Empleados";
+
+    List<Cargo> cargos = ViewBag.Cargos;
+    List<Area> areas = ViewBag.Areas;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-success-border">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fab fa-buromobelexperte"></i>&nbsp;@ViewBag.Title</h3>
+                <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+            </div>
+            <div class="card-body">
+                <div id="Error"></div>
+                <div class="text-center">
+                    <button id="btnNuevo" type="button" class="btn btn-info btn-sm"><i class="fa fa-plus"></i>&nbsp; Nuevo</button>
+                    <button id="btnRegresar" class="btn btn-warning btn-sm"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</button>
+                    <button id="btnGuardar" type="button" class="btn btn-primary btn-sm"><i class="fa fa-save"></i>&nbsp; Guardar</button>
+                </div>
+                <hr />
+                <div class="table-responsive">
+                    <table id="tblEmpleado" class="table table-sm table-bordered table-hover">
+                        <thead>
+                            <tr class="bg-primary">
+                                <th width="20"></th>
+                                <th width="20">Cargo</th>
+                                <th width="20">Area</th>
+                                <th width="20">Nombres</th>
+                                <th width="20">Apellido Paterno</th>
+                                <th width="20">Apellido Materno</th>
+                                <th width="20">Nro. Documento</th>
+                                <th width="20">Correo</th>
+                                <th width="20">Telefono</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SweetAlert2 -->
+<script src="~/plugins/sweetalert2/sweetalert2.all.min.js"></script>
+<script>
+    var index = {
+        ObtenerModelo: function () {
+            var model = {};
+            $.each($('#tblEmpleado tbody tr'), function (i, tr) {
+                model['Empleados[' + i + '].CargoId'] = $(tr).find('select.cargo').val();
+                model['Empleados[' + i + '].AreaId'] = $(tr).find('select.area').val();
+                model['Empleados[' + i + '].Nombre'] = $(tr).find('input.nombre').val();
+                model['Empleados[' + i + '].ApellidoPaterno'] = $(tr).find('input.apellido-paterno').val();
+                model['Empleados[' + i + '].ApellidoMaterno'] = $(tr).find('input.apellido-materno').val();
+                model['Empleados[' + i + '].NroDocumento'] = $(tr).find('input.nro-documento').val();
+                model['Empleados[' + i + '].Correo'] = $(tr).find('input.correo').val();
+                model['Empleados[' + i + '].Telefono'] = $(tr).find('input.telefono').val();
+            });
+
+            return model;
+        }
+    };
+
+
+    $(function () {
+        $('#btnNuevo').click(function () {
+            var tr = `
+                    <tr>
+                        <td class="text-center"><a class="text-danger option eliminar"><i class="fa fa-trash"></i></a></td>
+                        <td><select class="form-control form-control-sm cargo">
+                        <option value="">NINGUNO</option>
+                        @foreach(var item in cargos)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                        </select></td>
+
+                        <td><select class="form-control form-control-sm area">
+                        @foreach(var item in areas)
+                        {
+                            <option value="@item.Id">@item.Descripcion</option>
+                        }
+                        </select></td>
+                        <td><input class="form-control form-control-sm text-uppercase nombre" /></td>
+                        <td><input class="form-control form-control-sm text-uppercase apellido-paterno" /></td>
+                        <td><input class="form-control form-control-sm text-uppercase apellido-materno" /></td>
+                        <td><input class="form-control form-control-sm text-uppercase nro-documento" /></td>
+                        <td><input class="form-control form-control-sm text-uppercase correo" /></td>
+                        <td><input class="form-control form-control-sm text-uppercase telefono" /></td>
+                    </tr>
+                `;
+            $('#tblEmpleado tbody').append(tr);
+        });
+
+        $('#tblEmpleado tbody').delegate('a.eliminar', 'click', function () {
+            var tr = $(this).parents().eq(1);
+            tr.remove();
+        });
+
+        $('#btnRegresar').click(function () {
+            var cantidad = $('#tblEmpleado tbody tr').length;
+            if (cantidad > 0) {
+                if (confirm('¿Esta seguro de salir de la página?')) location.href = '/Empleado/Index';
+            } else location.href = '/Empleado/Index';
+        });
+
+        $('#btnGuardar').click(function () {
+            var model = index.ObtenerModelo();
+            $.ajax({
+                type: "POST",
+                url: "/Empleado/Masivo",
+                data: model,
+                beforeSend: function () {
+                    $("#Error").hide();
+                    $('#btnGuardar').attr("disabled", "disabled");
+                    helper.wait.append('#Error');
+                },
+                complete: function () {
+                    helper.wait.remove('#Error');
+                },
+                success: function (result) {
+                    Swal.fire({
+                        title: 'Se registraron los empleados!',
+                    }).then(() => {
+                        location.href = '/Empleado/Index'
+                    });
+                 },
+                error: function (result) {
+                    helper.wait.remove('#Error');
+                    //helper.errorShow('#Error', result.responseText);
+                    $("#Error").slideDown();
+                    $('#btnGuardar').removeAttr("disabled");
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+
+        });
+    });
+
+</script>

@@ -1,0 +1,173 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+<link href="~/plugins/jquery-treetable/css/screen.css" rel="stylesheet" />
+<link href="~/plugins/jquery-treetable/css/jquery.treetable.css" rel="stylesheet" />
+<link href="~/plugins/jquery-treetable/css/jquery.treetable.theme.default.css" rel="stylesheet" />
+<style>
+
+    table.treetable {
+        font-size: 13px;
+    }
+
+        table.treetable thead {
+            font-size: 1em;
+        }
+
+            table.treetable thead tr th {
+                padding: 1em;
+                border: 1px solid #dee2e6;
+            }
+
+        table.treetable tbody tr td {
+            cursor: default;
+            padding: .5em;
+            white-space: nowrap;
+        }
+
+        table.treetable tr.selected {
+            background-color: #d6d8db;
+            color: unset;
+            font-style: italic;
+            font-weight: bold;
+        }
+
+    #arbol-jerarquico tbody tr td:first-child {
+        cursor: pointer;
+    }
+</style>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-success-border">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fa fa-sitemap"></i>&nbsp;Estructura Organizacional</h3>
+                <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+            </div>
+            <div class="card-body">
+                <div id="Error"></div>
+                <div class="table-responsive">
+                    <table id="arbol-jerarquico" class="table table-sm table-bordered  text-uppercase">
+                        <caption>
+                            <a href="#" onclick="$('#arbol-jerarquico').treetable('expandAll'); return false;">Expandir</a>
+                            <a href="#" onclick="$('#arbol-jerarquico').treetable('collapseAll'); return false;">Colapsar</a>
+                        </caption>
+                        <thead>
+                            <tr class="bg-info">
+                                <th class="text-center">NIVEL</th>
+                                <th class="text-center" width="20" colspan="3">ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+
+<script src="~/plugins/jquery-treetable/js/jquery.treetable.js"></script>
+<script type="text/javascript">
+    var index = {
+        Listar: function () {
+            var table = $("#arbol-jerarquico");
+            $.ajax({
+                url: "/Estructura/Listar",
+                type: "GET",
+                dataType: "json",
+                beforeSend: function (xhr) { },
+                complete: function () { },
+                success: function (data) {
+                    index.GenerarTabla(table, data);
+                },
+                error: function (data) {
+                    //helper.errorShow('#Error', data.responseText)
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, estructuras) {
+            var rows = [`<tr data-id="0" data-tipo="" class="expanded">
+            <td class="table-secondary"><i class="fa fa-cubes"></i>&nbsp;ALICORP</td>
+            <td class="text-center" width="20"><a class="option nuevo-item text-success" title="Agregar Item"><i class="fa fa-plus"></i></a></td>
+            <td width="20"></td>
+            <td width="20"></td>
+            <tr>`];
+            rows += index.ListarEstructura(null, estructuras);
+
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            tbody.append(rows);
+            table.treetable({ expandable: true, nodeIdAttr: 'id', parentIdAttr: 'padreid' }, true);
+        },
+        ListarEstructura: function (padreId, estructuras) {
+            var rows = '', hijos = [];
+            $.each(estructuras, (i, x) => { if (x.PadreId == padreId) hijos.push(x); });
+            $.each(hijos, (i, x) => {
+                rows += `<tr data-id="${x.Id}" data-padreid="${x.PadreId || 0}" class="${x.Tablero ? "collapsed" : "expanded"}">
+                            <td class="${x.Tablero ? "table-success" : "table-secondary"}"><i class="fa ${x.Tablero ? "fa-table" : "fa-cubes"}"></i>&nbsp;${x.Codigo != null ? ("[" + x.Codigo + "]") : ""} ${x.Descripcion}</td>
+                            <td class="text-center" width="20"><a class="option nuevo-item text-success" title="Agregar Item"><i class="fa fa-plus"></i></a></td>
+                            <td class="text-center" width="20"><a class="option editar-item text-warning" title="Editar Item"><i class="fa fa-pencil-alt"></i></a></td>
+                            <td width="20">${x.Tablero ? '<a class="option modelar-tablero text-info" title="Modelar Tablero"><i class="fa fa-table"></i></a>' : ""}</td>
+                        <tr>`;
+                rows += index.ListarEstructura(x.Id, estructuras);
+            });
+            return rows;
+        },
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                    //helper.errorShow('#Error', result.responseText);
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#Error', data);
+                    })
+                }
+            });
+        }
+    };
+
+    $(function () {
+        index.Listar();
+        $('#arbol-jerarquico').delegate('a.nuevo-item', 'click', function () {
+            padreId = $(this).parents().eq(1).data('id');
+            padreId = padreId == 0 ? null : padreId;
+            index.AbrirModal('/Estructura/Nuevo', { callBack: 'SetEquipo', padreId });
+        });
+        $('#arbol-jerarquico').delegate('a.editar-item', 'click', function () {
+            var id = $(this).parents().eq(1).data('id');
+            index.AbrirModal('/Estructura/Editar', { callBack: 'SetEquipo', id });
+        });
+        $('#arbol-jerarquico').delegate('a.modelar-tablero', 'click', function () {
+            var id = $(this).parents().eq(1).data('id');
+            index.AbrirModal('/Estructura/ModelarTablero', { callBack: 'SetTablero', id });
+        });
+    });
+
+    var SetEquipo = function (item) {
+        $('#modal-ventana').modal('hide');
+        index.Listar();
+    }
+
+    var SetTablero = function (item) {
+        $('#modal-ventana').modal('hide');
+    }
+
+</script>
+

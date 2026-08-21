@@ -1,0 +1,191 @@
+﻿@{
+    ViewBag.Title = "Mis Verificaciones";
+}
+<link href="~/plugins/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
+
+<div class="row">
+    <div class="col-12">
+        <div class="card card-default">
+            <div class="card-header">
+                <h3 class="card-title w-100">
+                    <i class="fas fa-user-check"></i>&nbsp;Mis confirmaciones
+                    <img src="~/images/logo_sumo_ola.png" class="float-right" style="height: 25px;" />
+                </h3>
+            </div>
+            <div class="card-body bg-light">
+                <div class="form-row" id="Filtros">
+                    <div class="col-2">
+                        <label>Célula:</label>
+                        <input class="form-control form-control-sm" id="FEstructura" placeholder="Ingrese la estructura" />
+                    </div>
+                    <div class="col-3">
+                        <label>Tipo de confirmación:</label>
+                        <input class="form-control form-control-sm" id="FTipoConfirmacion" placeholder="Ingrese el tipo de confirmación" />
+                    </div>
+                    <div class="col-3">
+                        <label>Observado:</label>
+                        <input class="form-control form-control-sm" id="FObservado" placeholder="Ingrese el observado" />
+                    </div>
+                    <div class="col">
+                        <label>Fecha desde:</label>
+                        <input class="form-control form-control-sm datepicker" id="FFechaDesde" placeholder="Ingrese la fecha desde" />
+                    </div>
+                    <div class="col">
+                        <label>Fecha hasta:</label>
+                        <input class="form-control form-control-sm datepicker" id="FFechaHasta" placeholder="Ingrese la fecha hasta" />
+                    </div>
+                    <div class="col">
+                        <label>Es VP:</label>
+                        <select id="FVP" class="form-control form-control-sm">
+                            <option value="">TODOS</option>
+                            <option value="true">SI</option>
+                            <option value="false">NO</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer text-right bg-white">
+                <div id="mensajes"></div>
+                <button type="button" class="btn btn-success" id="btnNuevo"><i class="fa fa-plus"></i>&nbsp; Nuevo</button>
+                <a href="/" class="btn btn-warning"><i class="fa fa-chevron-left"></i>&nbsp; Regresar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card card-info">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="tblIndex"
+                           class="table table-nowrap table-sm table-bordered table-hover"
+                           data-function="index.Listar"
+                           data-pageindex="1"
+                           data-totalrows="0"
+                           data-pagesize="20"
+                           data-paginator="#paginator">
+                        <thead>
+                            <tr class="bg-success text-center">
+                                <th width="40"></th>
+                                <th width="20">#</th>
+                                <th width="200">Célula</th>
+                                <th>Tipo de Confirmación</th>
+                                <th width="250">Observado</th>
+                                <th width="150">Fecha Registro</th>
+                                <th width="150">Puntaje</th>
+                                <th width="40">VP</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="d-flex justify-content-end" id="paginator"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="modal-ventana">
+    <div id="ventana-container"></div>
+</div>
+
+<script src="~/plugins/bootstrap-datepicker/js/bootstrap-datepicker.min.js"></script>
+<script src="~/plugins/bootstrap-datepicker/locales/bootstrap-datepicker.es.min.js"></script>
+<script>
+    var index = {
+        Listar: function (page) {
+            var table = $("#tblIndex");
+            var model = {
+                'pageIndex': page,
+                'pageSize': table.data('pagesize'),
+                'filter.EstructuraDescripcion': $('#FEstructura').val(),
+                'filter.VerificacionNombre': $('#FTipoConfirmacion').val(),
+                'filter.Encargado': $('#FObservado').val(),
+                'filter.EmpleadoId': @ViewBag.EmpleadoId,
+                'filter.VP': $('#FVP').val(),
+            };
+            $.ajax({
+                url: "/Verificacion/ListarVerificarPorPagina",
+                type: "GET",
+                data: model,
+                dataType: "json",
+                beforeSend: function (xhr) { },
+                complete: function () { },
+                success: function (data) {
+                    table.data('pageindex', page);
+                    table.data('totalrows', data.totalRows);
+                    index.GenerarTabla(table, data.lista);
+                    if (data.totalRows == 0) table.append(`<tr><td class="text-center" colspan="8">No se encontraron registros.</td></tr>`);
+                },
+                error: function (data) {
+                    $.get('/ErrorHandler/GetError', {}, (data) => {
+                        helper.errorShow('#mensajes', data);
+                    })
+                }
+            });
+        },
+        GenerarTabla: function (table, lista) {
+            var tbody = table.children('tbody');
+            tbody.children('tr').remove();
+            var rows = '';
+            var numero = (table.data('pagesize') * table.data('pageindex')) - table.data('pagesize');
+            $.each(lista, function (i, r) {
+                rows += `<tr>
+                            <td class="text-center"><a class="option ver text-info" data-id="${r.Id}"><i class="fa fa-eye"></i></a></td>
+                            <td class="text-right">${++numero}</td>
+                            <td>${r.Estructura.Descripcion}</td>
+                            <td>${r.Verificacion.Nombre}</td>
+                            <td>${r.Encargado}</td>
+                            <td class="text-center">${r.FechaRegistro}</td>
+                            <td class="text-center">${r.PuntajeObtenido} / ${r.PuntajeMaximo}</td>
+                            <td class="text-center">${r.VP ? "SI" : "NO"}</td>
+                        </tr>`;
+
+            });
+            helper.pagination.update(table);
+            tbody.append(rows);
+        },
+        AbrirModal: function (url, model) {
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: model,
+                cache: false,
+                beforeSend: function () {
+                    helper.wait.modal('ventana-container');
+                    $('#modal-ventana').modal();
+                },
+                success: function (data) {
+                    $('#ventana-container').html(data);
+                },
+                error: function (result) {
+                    $('#modal-ventana').modal('hide');
+                }
+            });
+        },
+    };
+
+    $(function () {
+        $('#Filtros input').keypress(function (e) {
+            var key = e.keyCode || event.keyCode;
+            if (key == 13) index.Listar(1);
+        });
+        $('#Filtros select').change(function (e) { index.Listar(1); });
+        $('.datepicker').datepicker({
+            format: 'dd/mm/yyyy',
+            language: 'es',
+            autoclose: true
+        });
+        $('#btnNuevo').click(function () {
+            index.AbrirModal('/Verificacion/Seleccionar', { callBack: 'SetVerificacion' });
+        });
+        $('#tblIndex tbody').delegate('a.ver', 'click', function () {
+            var id = $(this).data('id');
+            location.href = '/Verificacion/Ver/' + id;
+        });
+        index.Listar(1);
+    });
+
+    var SetVerificacion = function (item) {
+        $('#modal-ventana').modal('hide');
+        if (item) location.href = '/Verificacion/Verificar/' + item.Id;
+    }
+</script>

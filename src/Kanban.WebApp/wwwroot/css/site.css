@@ -1,0 +1,214 @@
+﻿body {
+    font-family: 'Source Sans Pro','Helvetica Neue',Helvetica,Arial,sans-serif;
+}
+.content-wrapper > .content {
+    padding: .8rem;
+}
+
+.login-card-body, .register-card-body {
+    background: unset;
+}
+
+.login-box {
+    width: 450px;
+}
+
+.login-box > .card,
+.login-box > .card > .card-body {
+    border-radius: .25rem
+}
+
+.option,
+th.sort {
+    cursor: pointer;
+}
+legend {
+    font-size: 1.1rem;
+    border-bottom: 1px solid #e5e5e5;
+    /*color: #dc3545;*/
+}
+
+.text-sm legend {
+    font-size: 1rem;
+}
+/*
+.input-group-text,
+.datepicker,
+.form-control {
+    border-radius: 0 !important;
+}*/
+
+.table thead th {
+    text-align: center;
+    vertical-align: middle;
+    font-weight: 500;
+}
+
+.card-title {
+    /*color: #dc3545;*/
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+.form-control:focus {
+    border: 2px solid #0f82fd;
+}
+
+.btn-outline-primary:focus {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-outline-danger:focus {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-success:focus {
+    color: #fff;
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-outline-warning:focus {
+    color: #1f2d3d;
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-outline-dark:focus {
+    color: #fff;
+    background-color: #343a40;
+    border-color: #343a40;
+}
+
+.btn-outline-info:focus {
+    color: #fff;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+.btn-outline-secondary:focus {
+    color: #fff;
+    background-color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-light:focus {
+    color: #1f2d3d;
+    background-color: #f8f9fa;
+    border-color: #f8f9fa;
+}
+.dropify-wrapper {
+    border: 1px solid #e9ecef !important;
+}
+
+.table-nowrap tbody {
+    white-space: nowrap;
+}
+
+.table-vertical-align tbody td {
+    vertical-align: middle;
+}
+
+.custom-control-label{
+    cursor: pointer;
+}
+
+.input-group-prepend{
+    margin-right: 0;
+}
+.input-group-append{
+    margin-left: 0;
+}
+
+.card-info-border > .card-header {
+    border-top: 2px solid #17a2b8;
+}
+.card-warning-border > .card-header {
+    border-top: 2px solid #ffc107;
+}
+.card-primary-border > .card-header {
+    border-top: 2px solid #007bff;
+}
+.card-danger-border > .card-header {
+    border-top: 2px solid #dc3545;
+}
+.card-dark-border > .card-header {
+    border-top: 2px solid #343a40;
+}
+.card-secondary-border > .card-header {
+    border-top: 2px solid #6c757d;
+}
+.card-success-border > .card-header {
+    border-top: 2px solid #28a745;
+}
+.card-purple-border > .card-header {
+    border-top: 2px solid #6f42c1;
+}
+.card-pink-border > .card-header {
+    border-top: 2px solid #e83e8c;
+}
+.card-navy-border > .card-header {
+    border-top: 2px solid #001f3f;
+}
+.card-lightblue-border > .card-header {
+    border-top: 2px solid #3c8dbc;
+}
+.card-teal-border > .card-header {
+    border-top: 2px solid #20c997;
+}
+.card-cyan-border > .card-header {
+    border-top: 2px solid #17a2b8;
+}
+.card-gray-border > .card-header {
+    border-top: 2px solid #6c757d;
+}
+.card-orange-border > .card-header {
+    border-top: 2px solid #fd7e14;
+}
+th.sort span {
+    margin-left: .3rem;
+}
+
+.form-group {
+    margin-bottom: .5rem;
+}
+label {
+    margin-bottom: .1rem;
+}
+
+dl, ol, ul {
+    margin-bottom: 0;
+}
+
+.brand-text {
+    font-size: 18px;
+}
+
+.brand-link {
+    padding: .6rem .5rem;
+}
+
+.main-header.text-sm .nav-link > .fa, 
+.main-header.text-sm .nav-link > .fab, 
+.main-header.text-sm .nav-link > .far, 
+.main-header.text-sm .nav-link > .fas, 
+.main-header.text-sm .nav-link > .glyphicon, 
+.main-header.text-sm .nav-link > .ion, 
+.text-sm .main-header .nav-link > .fa, 
+.text-sm .main-header .nav-link > .fab, 
+.text-sm .main-header .nav-link > .far, 
+.text-sm .main-header .nav-link > .fas, 
+.text-sm .main-header .nav-link > .glyphicon, 
+.text-sm .main-header .nav-link > .ion {
+    font-size: 1rem;
+}
+
+.navbar-badge {
+    font-size: .7rem;
+}
