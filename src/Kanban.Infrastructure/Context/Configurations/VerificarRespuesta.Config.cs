@@ -1,4 +1,4 @@
-﻿using Kanban.Domain.Genericos.Verificacion;
+﻿using Kanban.Domain.Genericos.Verificaciones;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

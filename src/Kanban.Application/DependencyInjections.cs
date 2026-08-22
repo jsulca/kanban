@@ -3,9 +3,9 @@ using Kanban.Application.Abstractions.UseCases.Compromiso;
 using Kanban.Application.Abstractions.UseCases.Seguridad;
 using Kanban.Application.Abstractions.UseCases.Verificacion;
 using Kanban.Application.UseCases.Administracion;
-using Kanban.Application.UseCases.Compromiso;
+using Kanban.Application.UseCases.Compromisos;
 using Kanban.Application.UseCases.Seguridad;
-using Kanban.Application.UseCases.Verificacion;
+using Kanban.Application.UseCases.Verificaciones;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Kanban.Application;

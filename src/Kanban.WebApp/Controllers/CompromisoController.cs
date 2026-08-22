@@ -2,6 +2,18 @@
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 using System.IO;
+using Kanban.Application.Abstractions.UseCases.Administracion;
+using Kanban.Application.Abstractions.UseCases.Compromiso;
+using Kanban.Application.Abstractions.UseCases.Verificacion;
+using Kanban.Domain;
+using Kanban.Domain.Adicionales;
+using Kanban.Domain.Filtros;
+using Kanban.Domain.Genericos.Administracion;
+using Kanban.Domain.Genericos.Compromisos;
+using Kanban.Domain.Genericos.Verificaciones;
+using Kanban.WebApp.Commons;
+using Kanban.WebApp.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Kanban.WebApp.Controllers;
 
@@ -71,7 +83,7 @@ public class CompromisoController(
 
             ViewBag.Empleado = string.Format("{0}", user.Employee);
 
-            PlanAccion accion = planAccionLogica.Buscar(planAccionId);
+            var accion = planAccionLogica.Buscar(planAccionId);
 
             model.Descripcion = accion.Descripcion;
 
@@ -209,7 +221,6 @@ public class CompromisoController(
     {
         try
         {
-
             var user = HttpContext.GetUser()!;
 
             compromisoLogica.FueraFecha();
@@ -229,12 +240,12 @@ public class CompromisoController(
         try
         {
 
-            Estructura tablero = estructuraLogica.Buscar(id, true);
+            var tablero = estructuraLogica.Buscar(id, true);
 
             CompromisoFiltro filtro = new CompromisoFiltro
             {
                 TableroId = id,
-                Estados = new int[] {
+                Estados = new [] {
                     (int)EstadoCompromiso.NUEVO,
                     (int)EstadoCompromiso.PENDIENTE,
                     (int)EstadoCompromiso.POR_VERIFICAR,

@@ -1,8 +1,12 @@
 ﻿using System.Text.RegularExpressions;
+using Kanban.Application.Abstractions.UseCases.Seguridad;
+using Kanban.Domain.Genericos.Seguridad;
 using Kanban.SharedKernel;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Kanban.WebApp.Commons;
+using Kanban.WebApp.Models;
+using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
 namespace Kanban.WebApp.Controllers;

@@ -1,4 +1,4 @@
-using Kanban.Domain.Genericos.Compromiso;
+using Kanban.Domain.Genericos.Compromisos;
 
 namespace Kanban.Application.Common;
 

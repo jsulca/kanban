@@ -1,6 +1,6 @@
 using Kanban.Application.Common;
 using Kanban.Domain.Filtros;
-using Kanban.Domain.Genericos.Verificacion;
+using Kanban.Domain.Genericos.Verificaciones;
 
 namespace Kanban.Application.Abstractions.UseCases.Verificacion;
 

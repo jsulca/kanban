@@ -1,5 +1,6 @@
 ﻿
-@model Verificar
+@using Kanban.Domain.Genericos.Verificaciones
+@model Kanban.Domain.Genericos.Verificaciones.Verificar
 @{
     ViewBag.Title = "Ver Verificación";
     List<Categoria> categorias = Model.Respuestas.GroupBy(x => x.CategoriaId).Select(x => x.First().Categoria).ToList();

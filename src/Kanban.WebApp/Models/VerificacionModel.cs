@@ -1,4 +1,6 @@
-﻿namespace Kanban.WebApp.Models;
+﻿using Kanban.Domain.Genericos.Verificaciones;
+
+namespace Kanban.WebApp.Models;
 
 public struct VerificacionModel
 {

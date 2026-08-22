@@ -1,3 +1,5 @@
+using Kanban.Domain.Genericos.Administracion;
+
 namespace Kanban.WebApp.Commons;
 
 /// <summary>

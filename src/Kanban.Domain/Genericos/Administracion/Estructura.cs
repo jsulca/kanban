@@ -1,4 +1,6 @@
-﻿namespace Kanban.Domain.Genericos.Administracion;
+﻿using Kanban.Domain.Genericos.Compromisos;
+
+namespace Kanban.Domain.Genericos.Administracion;
 
 public class Estructura
 {
@@ -13,5 +15,5 @@ public class Estructura
     public List<EstructuraEmpleado> Empleados { get; set; } = [];
     public List<Sostenibilidad> Sostenibilidades { get; set; } = [];
 
-    public List<Compromiso.Compromiso> Compromisos { get; set; } = [];
+    public List<Compromiso> Compromisos { get; set; } = [];
 }

@@ -1,4 +1,5 @@
-﻿@model Verificacion
+﻿@using Kanban.Domain.Genericos.Verificaciones
+@model Kanban.Domain.Genericos.Verificaciones.Verificacion
 @{
     ViewBag.Title = "Nueva Lista de Verificación";
     List<Respuesta> respuestas = Model.Categorias[0].Preguntas[0].Respuestas;

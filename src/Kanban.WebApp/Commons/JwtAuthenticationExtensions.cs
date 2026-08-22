@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text;
+using Kanban.Application.Abstractions.UseCases.Seguridad;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;

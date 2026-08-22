@@ -2,6 +2,19 @@
 using System.IO;
 using System.Net;
 using System.Security.Claims;
+using Kanban.Application.Abstractions.UseCases.Administracion;
+using Kanban.Application.Abstractions.UseCases.Compromiso;
+using Kanban.Application.Abstractions.UseCases.Seguridad;
+using Kanban.Domain;
+using Kanban.Domain.Adicionales;
+using Kanban.Domain.Filtros;
+using Kanban.Domain.Genericos.Administracion;
+using Kanban.Domain.Genericos.Compromisos;
+using Kanban.Domain.Genericos.Seguridad;
+using Kanban.WebApp.Commons;
+using Kanban.WebApp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace Kanban.WebApp.Api;
 
@@ -41,6 +54,8 @@ public class CompromisoApiController(
             int cantidadPaginas = (int)Math.Ceiling(d);
             RGBA colorFondo, colorTexto;
 
+            
+            string listaJson = JsonConvert.SerializeObject( compromisos);
             respuesta.data = new
             {
                 lista = compromisos.Select(x =>
@@ -55,7 +70,7 @@ public class CompromisoApiController(
                         descripcion = x.Descripcion,
                         fecha = x.FechaRegistro.ToString("dd/MM/yyyy HH:mm"),
                         estado = x.Estado.ToString().Replace("_", " "),
-                        tablero = new { x.Tablero.Descripcion },
+                        tablero = new { x.Tablero?.Descripcion },
                         colorFondo = new
                         {
                             red = colorFondo.Red,
@@ -76,7 +91,7 @@ public class CompromisoApiController(
                         instancia = new { abreviatura = x.Instancia?.Abreviatura },
                         fechaProgramacion = x.FechaProgramacion?.ToString("dd/MM/yyyy"),
                         fechaReprogramacion = x.FechaReprogramacion?.ToString("dd/MM/yyyy"),
-                        estructura = new { descripcion = x.Estructura.Descripcion }
+                        estructura = new { descripcion = x.Estructura?.Descripcion }
                     };
                 }).ToList(),
                 totalRows,
@@ -140,7 +155,7 @@ public class CompromisoApiController(
                         foreach (var item2 in registros.OrderByDescending(x => x))
                         {
 
-                            compromisoEstado = compromiso.Estados.Where(x => x.FechaRegistro == item2).SingleOrDefault();
+                            compromisoEstado = compromiso.Estados.Where(x => x.FechaRegistro == item2).FirstOrDefault();
 
                             if (compromisoEstado != null)
                             {
@@ -154,7 +169,7 @@ public class CompromisoApiController(
                             }
                             if (compromiso.Instancias != null)
                             {
-                                compromisoInstancia = compromiso.Instancias.Where(x => x.FechaRegistro == item2).SingleOrDefault();
+                                compromisoInstancia = compromiso.Instancias.Where(x => x.FechaRegistro == item2).FirstOrDefault();
                                 if (compromisoInstancia != null)
                                 {
                                     detalles.Add(new SeguimientoDetalle

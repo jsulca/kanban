@@ -1,4 +1,7 @@
-﻿namespace Kanban.WebApp.Controllers;
+﻿using Kanban.WebApp.Commons;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Kanban.WebApp.Controllers;
 
 public class ErrorHandlerController : Controller
 {

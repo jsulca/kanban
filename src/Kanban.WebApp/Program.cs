@@ -3,6 +3,7 @@ using Kanban.Application;
 using Kanban.Infrastructure;
 using Kanban.WebApp.Commons;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 

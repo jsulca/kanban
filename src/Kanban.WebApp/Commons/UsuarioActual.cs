@@ -1,4 +1,7 @@
 using System.Security.Claims;
+using Kanban.Application.Abstractions.UseCases.Administracion;
+using Kanban.Application.Abstractions.UseCases.Seguridad;
+using Kanban.Domain.Genericos.Seguridad;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Caching.Memory;
 

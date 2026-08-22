@@ -1,6 +1,6 @@
 using Kanban.Domain.Genericos.Administracion;
 using Kanban.Domain.Genericos.Seguridad;
-using Kanban.Domain.Genericos.Verificacion;
+using Kanban.Domain.Genericos.Verificaciones;
 using Microsoft.EntityFrameworkCore;
 
 namespace Kanban.Infrastructure.Context;

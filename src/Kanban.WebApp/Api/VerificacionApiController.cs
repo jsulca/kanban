@@ -1,6 +1,13 @@
 ﻿
 using Microsoft.AspNetCore.Authorization;
 using System.Net;
+using Kanban.Application.Abstractions.UseCases.Administracion;
+using Kanban.Application.Abstractions.UseCases.Verificacion;
+using Kanban.Domain.Filtros;
+using Kanban.Domain.Genericos.Administracion;
+using Kanban.Domain.Genericos.Verificaciones;
+using Kanban.WebApp.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Kanban.WebApp.Api;
 

@@ -5,27 +5,6 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
-
-    <!-- Usings globales: el codigo portado de MVC5 traia estos namespaces en cada archivo. -->
-    <ItemGroup>
-        <Using Include="Microsoft.AspNetCore.Mvc" />
-        <Using Include="Microsoft.AspNetCore.Authorization" />
-        <Using Include="Kanban.Domain" />
-        <Using Include="Kanban.Domain.Adicionales" />
-        <Using Include="Kanban.Domain.Filtros" />
-        <Using Include="Kanban.Domain.Genericos.Administracion" />
-        <Using Include="Kanban.Domain.Genericos.Compromiso" />
-        <Using Include="Kanban.Domain.Genericos.Seguridad" />
-        <Using Include="Kanban.Domain.Genericos.Verificacion" />
-        <Using Include="Kanban.Application.Common" />
-        <Using Include="Kanban.Application.Abstractions.UseCases.Administracion" />
-        <Using Include="Kanban.Application.Abstractions.UseCases.Compromiso" />
-        <Using Include="Kanban.Application.Abstractions.UseCases.Seguridad" />
-        <Using Include="Kanban.Application.Abstractions.UseCases.Verificacion" />
-        <Using Include="Kanban.WebApp.Commons" />
-        <Using Include="Kanban.WebApp.Models" />
-    </ItemGroup>
-
     <ItemGroup>
       <ProjectReference Include="..\Kanban.Infrastructure\Kanban.Infrastructure.csproj" />
     </ItemGroup>

@@ -5,14 +5,14 @@ namespace Kanban.Application.Abstractions.Repositories.Verificacion;
 
 public interface IVerificacionRepositorio
 {
-    PagedResult<Domain.Genericos.Verificacion.Verificacion> ListarPorPagina(VerificacionFiltro? filtro, int page,
+    PagedResult<Domain.Genericos.Verificaciones.Verificacion> ListarPorPagina(VerificacionFiltro? filtro, int page,
         int pageSize);
 
-    List<Domain.Genericos.Verificacion.Verificacion> Listar();
+    List<Domain.Genericos.Verificaciones.Verificacion> Listar();
 
-    Domain.Genericos.Verificacion.Verificacion? Buscar(int id);
+    Domain.Genericos.Verificaciones.Verificacion? Buscar(int id);
 
-    bool Guardar(Domain.Genericos.Verificacion.Verificacion entidad);
+    bool Guardar(Domain.Genericos.Verificaciones.Verificacion entidad);
 
-    void Actualizar(Domain.Genericos.Verificacion.Verificacion entidad);
+    void Actualizar(Domain.Genericos.Verificaciones.Verificacion entidad);
 }
