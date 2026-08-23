@@ -9,6 +9,7 @@ public class EFContexto : DbContext
 {
     public EFContexto(DbContextOptions<EFContexto> options) : base(options)
     {
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
     }
 
     public DbSet<Empleado> Empleado { get; set; }

@@ -63,7 +63,7 @@ public class CompromisoController(
         }
     }
 
-    [SafetyFilter]
+    [SafetyFilter(NoValidarAccion = true)]
     public ActionResult NuevoPorPlanAccion(int planAccionId, string callBack = "SetCompromiso", int? tableroId = null)
     {
         try
